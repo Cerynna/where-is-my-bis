@@ -1,0 +1,29 @@
+{
+  "name": "feral-forever",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite --port 5190",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --port 5190",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.scripts.json",
+    "donnees": "node --experimental-strip-types --no-warnings scripts/donnees/tout.ts",
+    "donnees:construire": "node --experimental-strip-types --no-warnings scripts/donnees/construire.ts"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
