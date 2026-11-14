@@ -80,6 +80,9 @@ export function construire(build: string): Bilan {
         return n && (s.type === 'quete' || s.type === 'donjon') ? [n] : [];
       });
       if (entrees.length) niveau = Math.max(niveau, Math.min(...entrees));
+      // Garde-fou : une récompense n'est pas accessible plus de 15 niveaux sous son niveau d'objet
+      // (quête de pêche « niveau 1 » qui donne un objet de niveau 65, par exemple).
+      if (c.ilvl - niveau > 15) niveau = Math.min(60, c.ilvl - 10);
     }
 
     const maroquinier = c.liaison === 1 && sources.some((s) => s.type === 'metier' && /cuir/i.test(s.lieu));

@@ -13,7 +13,7 @@ export function App() {
   const [etat, setEtat] = useState<Etat>(lireEtat);
 
   useEffect(() => {
-    fetch('./data/objets.json')
+    fetch('./data/objets.json', { cache: 'no-cache' })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() as Promise<Donnees>; })
       .then(setDonnees)
       .catch((e: unknown) => setErreur(String(e)));
@@ -63,7 +63,7 @@ export function App() {
 
       <footer className="pied">
         <p>
-          {donnees ? `${nombre(donnees.objets.length)} objets · build du jeu ${donnees.build} · données du ${new Date(donnees.genere).toLocaleDateString('fr-FR')}. ` : ''}
+          {donnees ? `${nombre(donnees.objets.length)} objets · build du jeu ${donnees.build} · données du ${new Date(donnees.genere).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}. ` : ''}
           Stats lues dans les fichiers du jeu et le cache des objets révélés ; provenance d’après <a href="https://wowf.io" target="_blank" rel="noopener">wowf.io</a> ; icônes de Wowhead.
           Les butins du monde bleus et violets ne sont pas listés : trop rares pour compter dessus.
         </p>
