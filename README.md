@@ -1,16 +1,18 @@
-# Féral Forever
+# Druide Forever
 
-Site statique (React + TypeScript + Vite, aucun serveur) qui donne le meilleur équipement d'un druide farouche du niveau 1 au niveau 60 sur WoW Forever :
+Site statique (React + TypeScript + Vite, aucun serveur) qui donne le meilleur équipement d'un druide du niveau 1 au niveau 60 sur WoW Forever. Il couvre les quatre spécialisations : félin, ours, équilibre et restauration. Les objets proposés sont :
 
-- cuir ;
-- armes ;
+- armure de cuir et de tissu ;
+- armes, objets tenus en main gauche ;
 - colliers, bagues, bijoux ;
 - capes, idoles.
 
 Le site a deux vues :
 
 - **Ensemble conseillé** : une fiche de personnage avec le meilleur objet de chaque emplacement à ton niveau. Chaque emplacement a ses alternatives et la prochaine amélioration.
-- **Base d'objets** : tous les objets, avec recherche et filtres. Les filtres portent sur le niveau, le rôle (félin ou ours), la faction, la provenance, la qualité, l'hôtel des ventes, l'emplacement, le donjon ou la zone, les stats et le tri.
+- **Base d'objets** : tous les objets, avec recherche et filtres. Les filtres portent sur le niveau, la spécialisation, la faction, la provenance, la matière, la qualité, l'hôtel des ventes, l'emplacement, le donjon ou la zone, les stats et le tri.
+
+Pour l'arme, la fiche compare une arme à deux mains à la paire arme à une main + main gauche, et garde la meilleure.
 
 Les réglages sont gardés dans l'adresse, ce qui permet de partager un lien.
 
@@ -54,12 +56,20 @@ Après une mise à jour du jeu, relancer `npm run donnees` (les fiches déjà t�
 
 ## Valeur d'un objet
 
-`src/valeur.ts` donne le poids de chaque stat selon le rôle.
+`src/valeur.ts` donne le poids de chaque stat selon la spécialisation.
 
 - **Félin :**
   - 1 Force ≈ 1 Agilité ≈ 2 PA ;
   - toucher et expertise un cran au-dessus ;
   - environ 14 PA par point de DPS d'arme, car sur Forever le DPS de l'arme compte en forme animale.
 - **Ours :** Endurance, Agilité et armure d'abord.
+- **Équilibre :**
+  - puissance des sorts ;
+  - dégâts de Nature (Colère) et d'Arcanes (Feu stellaire, Éclat lunaire) ;
+  - puis Intelligence, critique, toucher et hâte. Ces scores sont communs aux attaques et aux sorts sur Forever.
+- **Restauration :** soins et puissance des sorts, puis mana toutes les 5 s, Intelligence et Esprit.
+- **Idoles :** leur effet ne se chiffre pas. On garde la plus récente dont l'effet concerne la spécialisation (Griffe, Mutilation, Colère, Toucher guérisseur…).
+
+Les dégâts des armes de lanceur de sorts sont plus bas que la formule générale. Sans fiche wowf.io, on les estime : × 0,745 à deux mains, × 0,66 à une main (rapport mesuré sur 140 armes). L'infobulle les marque « estimés ».
 
 Site de fan, non affilié à Blizzard Entertainment.

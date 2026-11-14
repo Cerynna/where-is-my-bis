@@ -1,4 +1,4 @@
-// Valeur d'un objet pour un druide farouche, et filtres communs aux deux vues.
+// Valeur d'un objet pour chaque spécialisation du druide, et filtres communs aux deux vues.
 import type { Etat, Role } from './etat.ts';
 import type { Emplacement, Objet, Perso, Stat } from './types.ts';
 
@@ -8,6 +8,9 @@ type Poids = Partial<Record<Stat, number>> & { dps: number; armureBase: number }
  * Félin : 1 Force = 2 PA, l'Agilité donne PA et critique, toucher et expertise un cran au-dessus.
  * Sur Forever, le DPS de l'arme compte en forme animale : environ 14 PA par point de DPS.
  * Ours : Endurance, Agilité et armure d'abord, puis défense et esquive.
+ * Équilibre : puissance des sorts ; Colère est de Nature, Feu stellaire et Éclat lunaire d'Arcanes.
+ * Restauration : soins et puissance des sorts, puis mana (mana/5, Intelligence, Esprit).
+ * Les scores (critique, toucher, hâte) sont communs aux attaques et aux sorts sur Forever.
  */
 export const POIDS: Record<Role, Poids> = {
   chat: {
@@ -19,9 +22,32 @@ export const POIDS: Record<Role, Poids> = {
     esp: 0.02, int: 0.05, pa_mv: 0.15, pa_hum: 0.2, pa_bete: 0.2, pa_dem: 0.08,
     rfeu: 0.1, rgivre: 0.1, rombre: 0.1, rnature: 0.1, rarcane: 0.1, dps: 6, armureBase: 0.12,
   },
+  equilibre: {
+    pds: 1, dsorts: 0.95, dnature: 0.5, darcane: 0.5, int: 0.45, crit: 0.8, tou: 0.9, hate: 0.8, mp5: 0.6,
+    esp: 0.1, penet: 0.3, end: 0.05, dps: 0, armureBase: 0,
+  },
+  resto: {
+    soins: 1, pds: 1, mp5: 1.2, int: 0.6, esp: 0.45, crit: 0.4, hate: 0.6, end: 0.05, dps: 0, armureBase: 0,
+  },
+};
+
+export const LIBELLES_ROLE: Record<Role, string> = {
+  chat: 'félin (dégâts)', ours: 'ours (tank)', equilibre: 'équilibre (sorts)', resto: 'restauration (soins)',
+};
+
+/** Mots qui disent à quelle spécialisation sert l'effet d'une idole. */
+const IDOLES: Record<Role, RegExp> = {
+  chat: /félin|forme de chat|Griffe|Lambeau|Mutilation|Déchiqueter|Déchirure|Rugissement sauvage|Morsure féroce|énergie|Griffure|Changeforme/i,
+  ours: /ours|Mutilation|Rossée|Mutiler|rage|Sauvagerie|Pilonnage|Lacérer|Rugissement démoralisant|Changeforme/i,
+  equilibre: /Colère|Feu stellaire|Éclat lunaire|Essaim d|Ouragan|Lucioles|sélén|Sarments|Racines|Esprit/i,
+  resto: /Toucher guérisseur|Récupération|Rétablissement|Prompte guérison|Tranquillité|soin|guérison|Régénération|Croissance|Esprit/i,
 };
 
 export function valeur(o: Objet, role: Role): number {
+  if (o.emplacement === 'relique') {
+    // Effet d'idole non chiffrable : on garde la plus récente de celles qui servent à la spécialisation.
+    return o.effets.some((e) => IDOLES[role].test(e.texte)) ? 10 + o.ilvl / 10 : 0;
+  }
   const p = POIDS[role];
   let v = 0;
   for (const [k, n] of Object.entries(o.stats) as [Stat, number][]) v += (p[k] ?? 0) * n;
@@ -33,6 +59,7 @@ export function valeur(o: Objet, role: Role): number {
 /** Filtres qui valent pour l'ensemble conseillé comme pour la base d'objets. */
 export function passeCommun(o: Objet, e: Etat): boolean {
   if (o.maroquinier && !e.maroquinier) return false;
+  if (o.matiere && !e.matieres.includes(o.matiere)) return false;
   if (!e.qualites.includes(o.q)) return false;
   if (e.hvSeulement && o.liaison !== 2) return false;
   const sources = o.sources.filter((s) =>
@@ -67,7 +94,7 @@ export function normaliser(t: string): string {
 }
 
 export type Case = 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets' | 'mains' | 'taille' | 'jambes' | 'pieds'
-  | 'doigt1' | 'doigt2' | 'bijou1' | 'bijou2' | 'arme' | 'relique';
+  | 'doigt1' | 'doigt2' | 'bijou1' | 'bijou2' | 'arme' | 'maing' | 'relique';
 
 export type Ensemble = Record<Case, Objet | null>;
 
@@ -89,7 +116,8 @@ export function meilleurEnsemble(objets: Objet[], e: Etat, portes: Objet[] = [])
   const idsPortes = new Set(portes.map((o) => o.id));
   const portables = [
     ...objets.filter((o) => !idsPortes.has(o.id) && o.niveau <= e.niveau && passeCommun(o, e)),
-    ...portes,
+    // Tes pièces ne passent pas les filtres, mais restent soumises au niveau choisi.
+    ...portes.filter((o) => o.niveau <= e.niveau),
   ];
   const par = (emp: Emplacement[]) => portables
     .filter((o) => emp.includes(o.emplacement))
@@ -97,12 +125,19 @@ export function meilleurEnsemble(objets: Objet[], e: Etat, portes: Objet[] = [])
   const premier = (emp: Emplacement) => par([emp])[0] ?? null;
   const bagues = par(['doigt']);
   const bijoux = par(['bijou']).filter((o) => valeur(o, e.role) > 0);
+  // Arme à deux mains, ou arme à une main + objet tenu en main gauche : la paire qui vaut le plus.
+  const deuxMains = premier('arme2m');
+  const uneMain = premier('arme1m');
+  const mainGauche = par(['maing']).filter((o) => valeur(o, e.role) > 0)[0] ?? null;
+  const v = (o: Objet | null) => (o ? valeur(o, e.role) : 0);
+  const paire = uneMain && v(uneMain) + v(mainGauche) > v(deuxMains);
   return {
     tete: premier('tete'), cou: premier('cou'), epaules: premier('epaules'), dos: premier('dos'),
     torse: premier('torse'), poignets: premier('poignets'), mains: premier('mains'), taille: premier('taille'),
     jambes: premier('jambes'), pieds: premier('pieds'),
     doigt1: bagues[0] ?? null, doigt2: bagues[1] ?? null, bijou1: bijoux[0] ?? null, bijou2: bijoux[1] ?? null,
-    arme: par(['arme2m', 'arme1m'])[0] ?? null, relique: premier('relique'),
+    arme: paire ? uneMain : deuxMains ?? uneMain, maing: paire ? mainGauche : null,
+    relique: par(['relique']).filter((o) => valeur(o, e.role) > 0)[0] ?? null,
   };
 }
 
@@ -132,7 +167,7 @@ export function comparer(ens: Ensemble, perso: Perso | null, portes: Objet[], ro
     // Gain infini : la pièce remplacée n'a aucune stat utile (sacoche, bijou de métier…).
     return { type: 'mieux', remplace: ancien, gain: va > 0 ? (v - va) / va : Number.POSITIVE_INFINITY };
   };
-  for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'relique'] as Case[]) {
+  for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'maing', 'relique'] as Case[]) {
     res[c] = statut(ens[c], parCase.get(c) ?? null);
   }
   for (const [a, b] of [['doigt1', 'doigt2'], ['bijou1', 'bijou2']] as [Case, Case][]) {

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import type { Etat } from '../etat.ts';
-import { COURT, nombre } from '../libelles.ts';
+import { BILAN, COURT, SPECIALISATIONS, nombre } from '../libelles.ts';
 import type { Emplacement, Objet, Perso, Stat } from '../types.ts';
 import {
-  comparer, meilleurEnsemble, passeCommun, sourcesVisibles, valeur, valeurPortee,
+  LIBELLES_ROLE, comparer, meilleurEnsemble, passeCommun, sourcesVisibles, valeur, valeurPortee,
   type Case, type Ensemble as TEnsemble, type Statut,
 } from '../valeur.ts';
 import { Icone } from './Icone.tsx';
@@ -17,8 +17,15 @@ const DETAIL: [Emplacement[], string, Case[]][] = [
   [['torse'], 'Torse', ['torse']], [['poignets'], 'Poignets', ['poignets']], [['mains'], 'Mains', ['mains']],
   [['taille'], 'Taille', ['taille']], [['jambes'], 'Jambes', ['jambes']], [['pieds'], 'Pieds', ['pieds']],
   [['doigt'], 'Doigts', ['doigt1', 'doigt2']], [['bijou'], 'Bijoux', ['bijou1', 'bijou2']],
-  [['arme2m', 'arme1m'], 'Arme', ['arme']], [['relique'], 'Idole', ['relique']],
+  [['arme2m', 'arme1m'], 'Arme', ['arme']], [['maing'], 'Main gauche', ['maing']], [['relique'], 'Idole', ['relique']],
 ];
+
+const NOTES: Record<Etat['role'], string> = {
+  chat: '',
+  ours: 'En ours, la forme multiplie l’armure : vise l’Endurance et l’armure.',
+  equilibre: 'Colère profite des dégâts de Nature, Feu stellaire et Éclat lunaire de ceux des Arcanes ; la puissance des sorts sert aux deux.',
+  resto: 'Les soins et la puissance des sorts comptent autant ; le mana toutes les 5 s et l’Intelligence font tenir les longs combats.',
+};
 
 export function resume(o: Objet): string {
   const p: string[] = [];
@@ -83,8 +90,8 @@ function totaux(objets: (Objet | null | undefined)[]) {
 function Bilan({ ens, etat, portes }: { ens: TEnsemble; etat: Etat; portes: Objet[] }) {
   const { t, armure } = totaux(Object.values(ens));
   const avant = portes.length ? totaux(portes) : null;
-  const lignes: [Stat, string][] = [['agi', 'Agilité'], ['for', 'Force'], ['end', 'Endurance'], ['pa', 'Puissance d’attaque'],
-    ['crit', 'Score de critique'], ['tou', 'Score de toucher'], ['exp', 'Expertise'], ['hate', 'Score de hâte'], ['def', 'Défense'], ['esq', 'Score d’esquive']];
+  const lignes = BILAN[etat.role];
+  const physique = etat.role === 'chat' || etat.role === 'ours';
   const armePortee = portes.find((o) => o.arme);
   const vAvant = portes.reduce((s, o) => s + valeur(o, etat.role), 0);
   const vApres = Object.values(ens).reduce((s, o) => s + (o ? valeur(o, etat.role) : 0), 0);
@@ -101,13 +108,11 @@ function Bilan({ ens, etat, portes }: { ens: TEnsemble; etat: Etat; portes: Obje
       <dl>
         {lignes.filter(([k]) => t[k] || avant?.t[k]).map(([k, l]) => (<div key={k}><dt>{l}</dt>{cellule(avant?.t[k], t[k])}</div>))}
         <div><dt>Armure des pièces</dt>{cellule(avant ? avant.armure + (avant.t.armure ?? 0) : undefined, armure + (t.armure ?? 0))}</div>
-        {ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
+        {physique && ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
       </dl>
       <p className="note">
-        {avant && vAvant > 0 ? `Valeur estimée pour ${etat.role === 'chat' ? 'le félin' : 'l’ours'} : +${nombre(Math.max(0, (vApres - vAvant) / vAvant) * 100)} % en suivant l’ensemble conseillé. ` : ''}
-        {etat.role === 'chat'
-          ? `En félin, la Force et l’arme valent environ ${nombre(pa)} PA, sans compter l’Agilité.`
-          : 'En ours, la forme multiplie l’armure : vise l’Endurance et l’armure.'}
+        {avant && vAvant > 0 ? `Valeur estimée en ${SPECIALISATIONS[etat.role].toLowerCase()} : +${nombre(Math.max(0, (vApres - vAvant) / vAvant) * 100)} % en suivant l’ensemble conseillé. ` : ''}
+        {etat.role === 'chat' ? `En félin, la Force et l’arme valent environ ${nombre(pa)} PA, sans compter l’Agilité.` : NOTES[etat.role]}
       </p>
     </div>
   );
@@ -127,14 +132,15 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
           {perso
             ? `Comparé à ce que porte ${perso.nom} : ${nbChangements ? `${nbChangements} pièce${nbChangements > 1 ? 's' : ''} à changer` : 'rien de mieux à trouver pour l’instant'}. `
             : 'Le meilleur objet de chaque emplacement'}
-          {perso ? '' : ` pour un druide ${etat.role === 'chat' ? 'félin (dégâts)' : 'ours (tank)'}${etat.faction !== 'toutes' ? `, ${etat.faction}` : ''}. `}
+          {perso ? '' : ` pour un druide ${LIBELLES_ROLE[etat.role]}${etat.faction !== 'toutes' ? `, ${etat.faction}` : ''}. `}
           Survole un objet pour voir son infobulle ; son nom ouvre sa fiche Wowhead.
         </p>
         <div className="fiche">
           <div className="colonne">{GAUCHE.map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} etat={etat} statut={statuts[c]} />)}</div>
           <div className="centre">
             <Bilan ens={ens} etat={etat} portes={portes} />
-            <Carte libelle="Arme" objet={ens.arme} etat={etat} statut={statuts.arme} />
+            <Carte libelle={ens.maing ? 'Arme à une main' : 'Arme'} objet={ens.arme} etat={etat} statut={statuts.arme} />
+            {ens.maing && <Carte libelle="Main gauche" objet={ens.maing} etat={etat} statut={statuts.maing} />}
           </div>
           <div className="colonne">{DROITE.map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} droite etat={etat} statut={statuts[c]} />)}</div>
         </div>
@@ -216,7 +222,7 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
 }
 
 function libelleCourt(e: Emplacement): string {
-  return { tete: 'Tête', cou: 'Cou', epaules: 'Épaules', dos: 'Dos', torse: 'Torse', poignets: 'Poignets', mains: 'Mains', taille: 'Taille', jambes: 'Jambes', pieds: 'Pieds', doigt: 'Doigt', bijou: 'Bijou', arme2m: 'Deux mains', arme1m: 'Une main', relique: 'Idole' }[e];
+  return { tete: 'Tête', cou: 'Cou', epaules: 'Épaules', dos: 'Dos', torse: 'Torse', poignets: 'Poignets', mains: 'Mains', taille: 'Taille', jambes: 'Jambes', pieds: 'Pieds', doigt: 'Doigt', bijou: 'Bijou', arme2m: 'Deux mains', arme1m: 'Une main', maing: 'Main gauche', relique: 'Idole' }[e];
 }
 
 function labelSource(type: Objet['sources'][number]['type'] | undefined): string {

@@ -164,8 +164,9 @@ function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat
 function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: Objet[] }) {
   const niveau = etat.niveau;
   const compare = pieceComparee(o, portes, etat);
-  const type = o.arme ? ARMES[o.arme.sous] ?? '' : o.emplacement === 'dos' ? 'Tissu'
-    : ['cou', 'doigt', 'bijou', 'relique'].includes(o.emplacement) ? (o.emplacement === 'relique' ? 'Idole' : '') : 'Cuir';
+  const type = o.arme ? ARMES[o.arme.sous] ?? ''
+    : o.matiere ? (o.matiere === 'cuir' ? 'Cuir' : 'Tissu')
+    : o.emplacement === 'dos' ? 'Tissu' : o.emplacement === 'relique' ? 'Idole' : '';
   return (
     <>
       <div className={`ib-titre q${o.q}`}>{o.nom}</div>
@@ -176,7 +177,7 @@ function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: O
       {o.arme && (
         <>
           <div className="ib-lr"><span>{o.arme.min} - {o.arme.max} points de dégâts</span><span>Vitesse {nombre(o.arme.vitesse, 2)}</span></div>
-          <div>({nombre(o.arme.dps, 1)} points de dégâts par seconde)</div>
+          <div>({nombre(o.arme.dps, 1)} points de dégâts par seconde){o.arme.estime ? <span className="ib-gris"> · estimés</span> : null}</div>
         </>
       )}
       {o.armure > 0 && <div>{o.armure} Armure</div>}
@@ -187,6 +188,8 @@ function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: O
       </div>
       <div className="ib-jaune">Niveau d’objet {o.ilvl}</div>
       {STATS_VERTES.map(([k, l]) => o.stats[k] ? <div key={k} className="ib-vert">Équipé : +{o.stats[k]} {l}.</div> : null)}
+      {o.stats.mp5 ? <div className="ib-vert">Équipé : Rend {o.stats.mp5} points de mana toutes les 5 s.</div> : null}
+      {o.stats.vie5 ? <div className="ib-vert">Équipé : Rend {o.stats.vie5} points de vie toutes les 5 s.</div> : null}
       {o.effets.map((f, i) => (
         <div key={i} className="ib-vert">{f.type === 0 ? 'Utiliser : ' : f.type === 2 ? 'Chances quand vous touchez : ' : 'Équipé : '}{f.texte}</div>
       ))}

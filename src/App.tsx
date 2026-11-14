@@ -28,8 +28,18 @@ export function App() {
   const surImport = useCallback((p: Perso) => {
     setPerso(p);
     ecrirePerso(p);
-    // Les réglages suivent le personnage : niveau, faction, travail du cuir.
-    setEtat((e) => ({ ...e, niveau: Math.min(60, Math.max(1, p.niveau)), faction: p.faction ?? e.faction, maroquinier: p.maroquinier }));
+    // Les réglages suivent le personnage : niveau, faction, travail du cuir, spécialisation active.
+    const spe = p.specialisation ?? '';
+    setEtat((e) => ({
+      ...e,
+      niveau: Math.min(60, Math.max(1, p.niveau)),
+      faction: p.faction ?? e.faction,
+      maroquinier: p.maroquinier,
+      role: /équilibre/i.test(spe) ? 'equilibre'
+        : /restauration/i.test(spe) ? 'resto'
+        : /farouche/i.test(spe) && (e.role === 'equilibre' || e.role === 'resto') ? 'chat'
+        : e.role,
+    }));
   }, []);
   const surOubli = useCallback(() => { setPerso(null); ecrirePerso(null); }, []);
 
@@ -51,8 +61,8 @@ export function App() {
       <header className="entete">
         <div className="entete-int">
           <div className="marque">
-            <span className="sur-titre">Druide · Combat farouche · WoW Forever</span>
-            <h1>Féral Forever</h1>
+            <span className="sur-titre">Félin · Ours · Équilibre · Restauration · WoW Forever</span>
+            <h1>Druide Forever</h1>
           </div>
           <nav className="onglets" aria-label="Vues">
             <button type="button" aria-pressed={etat.vue === 'ensemble'} onClick={() => maj({ vue: 'ensemble' })}>Ensemble conseillé</button>

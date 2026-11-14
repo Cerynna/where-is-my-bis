@@ -19,6 +19,7 @@ export interface Candidat {
   unique?: 1 | 2;
   emplacement: Emplacement;
   inv: number;
+  matiere?: 'cuir' | 'tissu';
   stats: Partial<Record<Stat, number>>;
   statsInconnues: number[];
   armure: number;
@@ -27,6 +28,8 @@ export interface Candidat {
   lanceur: boolean;
   effets: Effet[];
   icone?: string;
+  /** Numéro de fichier de l'icône (secours : CDN de Blizzard). */
+  iconeId?: number;
   /** Présent dans le cache des objets révélés. */
   revele: boolean;
 }
@@ -35,27 +38,35 @@ const STATS: Record<number, Stat> = {
   3: 'agi', 4: 'for', 5: 'int', 6: 'esp', 7: 'end', 38: 'pa', 32: 'crit', 31: 'tou', 36: 'hate', 37: 'exp',
   12: 'def', 13: 'esq', 14: 'par', 50: 'armure', 48: 'blocage', 45: 'pds', 41: 'soins', 42: 'dsorts', 43: 'mp5', 46: 'vie5',
   51: 'rfeu', 52: 'rgivre', 54: 'rombre', 55: 'rnature', 56: 'rarcane', 128: 'pa_mv', 125: 'pa_hum', 131: 'pa_bete', 127: 'pa_dem',
+  // Stats propres à Forever, identifiées sur wowf.io : dégâts par école de magie, pénétration des sorts
+  47: 'penet', 83: 'dphys', 84: 'dsacre', 85: 'dfeu', 86: 'dnature', 87: 'dgivre', 88: 'dombre', 89: 'darcane',
 };
 
 // Colonne du budget de stats (RandPropPoints) selon l'emplacement.
 const INDEX_BUDGET: Record<number, number> = {
-  1: 0, 5: 0, 20: 0, 7: 0, 17: 0, 3: 1, 10: 1, 6: 1, 8: 1, 12: 1, 9: 2, 2: 2, 11: 2, 16: 2, 13: 3, 21: 3, 28: 4,
+  1: 0, 5: 0, 20: 0, 7: 0, 17: 0, 3: 1, 10: 1, 6: 1, 8: 1, 12: 1, 9: 2, 2: 2, 11: 2, 16: 2, 23: 2, 13: 3, 21: 3, 28: 4,
 };
-const EMPLACEMENT_CUIR: Record<number, Emplacement> = {
+const EMPLACEMENT_ARMURE: Record<number, Emplacement> = {
   1: 'tete', 3: 'epaules', 5: 'torse', 20: 'torse', 6: 'taille', 7: 'jambes', 8: 'pieds', 9: 'poignets', 10: 'mains',
 };
 const ARMES_DRUIDE = new Set([4, 5, 6, 10, 13, 15]);
 
-function emplacement(classe: number, sous: number, inv: number): Emplacement | null {
-  if (classe === 4 && sous === 2 && EMPLACEMENT_CUIR[inv]) return EMPLACEMENT_CUIR[inv] ?? null;
-  if (classe === 2 && ARMES_DRUIDE.has(sous)) return inv === 17 ? 'arme2m' : [13, 21].includes(inv) ? 'arme1m' : null;
-  if (classe === 4 && sous === 0 && inv === 2) return 'cou';
-  if (classe === 4 && sous === 0 && inv === 11) return 'doigt';
-  if (classe === 4 && sous === 0 && inv === 12) return 'bijou';
-  if (classe === 4 && inv === 16) return 'dos';
-  if (classe === 4 && sous === 8 && inv === 28) return 'relique';
+/** Emplacement (et matière pour l'armure) d'un objet utilisable par un druide, sinon null. */
+function emplacement(classe: number, sous: number, inv: number): { emp: Emplacement; matiere?: 'cuir' | 'tissu' } | null {
+  const armure = EMPLACEMENT_ARMURE[inv];
+  if (classe === 4 && (sous === 1 || sous === 2) && armure) return { emp: armure, matiere: sous === 2 ? 'cuir' : 'tissu' };
+  if (classe === 2 && ARMES_DRUIDE.has(sous)) return inv === 17 ? { emp: 'arme2m' } : [13, 21].includes(inv) ? { emp: 'arme1m' } : null;
+  if (classe === 4 && sous === 0 && inv === 2) return { emp: 'cou' };
+  if (classe === 4 && sous === 0 && inv === 11) return { emp: 'doigt' };
+  if (classe === 4 && sous === 0 && inv === 12) return { emp: 'bijou' };
+  if (classe === 4 && sous === 0 && inv === 23) return { emp: 'maing' };
+  if (classe === 4 && inv === 16) return { emp: 'dos' };
+  if (classe === 4 && sous === 8 && inv === 28) return { emp: 'relique' };
   return null;
 }
+
+/** Rapport DPS réel / formule pour les armes de lanceur de sorts (mesuré sur 140 armes vérifiées sur wowf.io). */
+const FACTEUR_LANCEUR = { arme2m: 0.745, arme1m: 0.66 } as const;
 
 const nombre = (v: string | number | undefined): number => Number(v ?? 0);
 
@@ -144,8 +155,9 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
     const it = items.get(id);
     if (!it) continue;
     const inv = nombre(s.InventoryType);
-    const emp = emplacement(nombre(it.ClassID), nombre(it.SubclassID), inv);
-    if (!emp) continue;
+    const place = emplacement(nombre(it.ClassID), nombre(it.SubclassID), inv);
+    if (!place) continue;
+    const emp = place.emp;
     const rl = nombre(s.RequiredLevel);
     const ilvl = nombre(s.ItemLevel);
     const q = nombre(s.OverallQualityID);
@@ -171,12 +183,12 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
     }
 
     let armure = 0;
-    if (emp !== 'relique' && (emp === 'dos' || nombre(it.ClassID) === 4) && !['cou', 'doigt', 'bijou'].includes(emp)) {
+    if (place.matiere || emp === 'dos') {
       const t = armTotal.get(String(ilvl));
       const l = armLieu.get(String(inv));
       const aq = armQualite.get(String(ilvl));
       if (t && l && aq) {
-        const tissu = emp === 'dos';
+        const tissu = place.matiere !== 'cuir';
         armure = Math.round(nombre(tissu ? t.Cloth : t.Leather) * nombre(tissu ? l.Clothmodifier : l.Leathermodifier) * nombre(aq[`Qualitymod_${q}`]));
       }
     }
@@ -185,12 +197,13 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
     const lanceur = (nombre(s.Flags_4) & 0x100) !== 0;
     if (emp === 'arme2m' || emp === 'arme1m') {
       const table = emp === 'arme2m' ? degats2 : degats1;
-      const dps = nombre(table.get(String(ilvl))?.[`Quality_${q}`]);
+      // Arme de lanceur : la formule surestime les dégâts, on applique le rapport mesuré.
+      const dps = nombre(table.get(String(ilvl))?.[`Quality_${q}`]) * (lanceur ? FACTEUR_LANCEUR[emp] : 1);
       const vitesse = nombre(s.ItemDelay) / 1000;
       const ecart = nombre(s.DmgVariance);
       const min = Math.floor(dps * vitesse * (1 - ecart / 2));
       const max = Math.floor(dps * vitesse * (1 + ecart / 2) + 0.5);
-      arme = { min, max, vitesse, dps: Math.round(((min + max) / 2 / vitesse) * 10) / 10, sous: nombre(it.SubclassID) };
+      arme = { min, max, vitesse, dps: Math.round(((min + max) / 2 / vitesse) * 10) / 10, sous: nombre(it.SubclassID), estime: lanceur || undefined };
     }
 
     const effets: Effet[] = [];
@@ -210,7 +223,8 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
       const app = apparenceObjet.get(id);
       fichier = nombre(apparences.get(app?.ItemAppearanceID ?? '')?.DefaultIconFileDataID);
     }
-    const icone = fichiers.get(String(fichier))?.FileName?.replace(/\.blp$/i, '').toLowerCase();
+    // Quelques noms de fichier de Blizzard contiennent une espace : on la remplace pour le nom local.
+    const icone = fichiers.get(String(fichier))?.FileName?.replace(/\.blp$/i, '').toLowerCase().replace(/\s+/g, '_');
     const flags0 = nombre(s.Flags_0) >>> 0;
     const unique = nombre(s.MaxCount) === 1 ? 1 : flags0 & 0x80000 ? 2 : undefined;
 
@@ -226,6 +240,7 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
       unique,
       emplacement: emp,
       inv,
+      matiere: place.matiere,
       stats,
       statsInconnues: inconnues,
       armure,
@@ -233,6 +248,7 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
       lanceur,
       effets,
       icone,
+      iconeId: fichier || undefined,
       revele: id in hotfix.sparse,
     });
   }

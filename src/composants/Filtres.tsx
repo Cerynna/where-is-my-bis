@@ -1,6 +1,6 @@
-import type { Etat } from '../etat.ts';
-import { DEFAUT } from '../etat.ts';
-import { COURT, EMPLACEMENTS, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES, STATS_FILTRE } from '../libelles.ts';
+import type { Etat, Matiere } from '../etat.ts';
+import { DEFAUT, ROLES } from '../etat.ts';
+import { COURT, EMPLACEMENTS, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES, SPECIALISATIONS, STATS_FILTRE } from '../libelles.ts';
 import type { Emplacement, Stat, TypeSource } from '../types.ts';
 
 interface Props {
@@ -33,10 +33,23 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
       </fieldset>
 
       <fieldset>
-        <legend>Rôle</legend>
-        <div className="seg">
-          <button type="button" aria-pressed={etat.role === 'chat'} onClick={() => maj({ role: 'chat' })}>Félin (dégâts)</button>
-          <button type="button" aria-pressed={etat.role === 'ours'} onClick={() => maj({ role: 'ours' })}>Ours (tank)</button>
+        <legend>Spécialisation</legend>
+        <div className="seg seg-specs">
+          {ROLES.map((r) => (
+            <button key={r} type="button" aria-pressed={etat.role === r} onClick={() => maj({ role: r, stats: [] })}>{SPECIALISATIONS[r]}</button>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Armure</legend>
+        <div className="puces">
+          {(['cuir', 'tissu'] as Matiere[]).map((m) => (
+            <label key={m} className="puce">
+              <input type="checkbox" checked={etat.matieres.includes(m)} onChange={() => maj({ matieres: basculer(etat.matieres, m) })} />
+              {m === 'cuir' ? 'Cuir' : 'Tissu'}
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -136,7 +149,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
           <fieldset>
             <legend>Doit avoir</legend>
             <div className="puces">
-              {STATS_FILTRE.map((s: Stat) => (
+              {STATS_FILTRE[etat.role].map((s: Stat) => (
                 <label key={s} className="puce">
                   <input type="checkbox" checked={etat.stats.includes(s)} onChange={() => maj({ stats: basculer(etat.stats, s) })} />
                   {COURT[s]}
@@ -147,7 +160,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
         </>
       )}
 
-      <button type="button" className="lien" onClick={() => maj({ ...DEFAUT, vue: etat.vue, niveau: etat.niveau })}>
+      <button type="button" className="lien" onClick={() => maj({ ...DEFAUT, vue: etat.vue, niveau: etat.niveau, role: etat.role })}>
         Réinitialiser les filtres
       </button>
     </div>

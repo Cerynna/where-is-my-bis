@@ -4,13 +4,15 @@
 export type Emplacement =
   | 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets'
   | 'mains' | 'taille' | 'jambes' | 'pieds' | 'doigt' | 'bijou'
-  | 'arme2m' | 'arme1m' | 'relique';
+  | 'arme2m' | 'arme1m' | 'maing' | 'relique';
 
 export type Stat =
   | 'agi' | 'for' | 'end' | 'int' | 'esp'
   | 'pa' | 'crit' | 'tou' | 'hate' | 'exp' | 'def' | 'esq' | 'par' | 'armure' | 'blocage'
   | 'pa_mv' | 'pa_hum' | 'pa_bete' | 'pa_dem'
-  | 'pds' | 'soins' | 'dsorts' | 'mp5' | 'vie5'
+  | 'pds' | 'soins' | 'dsorts' | 'mp5' | 'vie5' | 'penet'
+  | 'dnature' | 'darcane' | 'dfeu' | 'dgivre' | 'dombre' | 'dsacre' | 'dphys'
+  | 'critsorts' | 'tousorts'
   | 'rfeu' | 'rgivre' | 'rombre' | 'rnature' | 'rarcane';
 
 export type TypeSource =
@@ -36,6 +38,8 @@ export interface Arme {
   dps: number;
   /** Sous-classe d'arme du jeu (4/5 masse, 6 hast, 10 bâton, 13 pugilat, 15 dague). */
   sous: number;
+  /** Dégâts estimés (arme de lanceur de sorts sans fiche vérifiée). */
+  estime?: boolean;
 }
 
 export interface Effet {
@@ -62,6 +66,8 @@ export interface Objet {
   emplacement: Emplacement;
   /** InventoryType du jeu, pour le libellé exact de l'emplacement. */
   inv: number;
+  /** Pièces d'armure : cuir ou tissu. */
+  matiere?: 'cuir' | 'tissu';
   stats: Partial<Record<Stat, number>>;
   armure: number;
   arme?: Arme;

@@ -83,6 +83,7 @@ const CASES: Record<string, [string, Emplacement]> = {
   chest: ['torse', 'torse'], wrist: ['poignets', 'poignets'], hand: ['mains', 'mains'], waist: ['taille', 'taille'],
   leg: ['jambes', 'jambes'], foot: ['pieds', 'pieds'], leftFinger: ['doigt1', 'doigt'], rightFinger: ['doigt2', 'doigt'],
   leftTrinket: ['bijou1', 'bijou'], rightTrinket: ['bijou2', 'bijou'], weapon: ['arme', 'arme2m'], ranged: ['relique', 'relique'],
+  offHand: ['maing', 'maing'], offhand: ['maing', 'maing'],
 };
 
 function versObjet(a: ObjetArmurerie, emplacement: Emplacement): Objet {

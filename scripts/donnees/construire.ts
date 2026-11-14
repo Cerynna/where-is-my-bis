@@ -1,5 +1,5 @@
 // Assemble public/data/objets.json : candidats du jeu + provenance wowf.io,
-// sans les butins du monde improbables ni les objets inutiles à un druide farouche.
+// sans les butins du monde improbables ni les objets inutiles à un druide (toutes spécialisations).
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Donnees, Objet, Source, Stat } from '../../src/types.ts';
@@ -8,18 +8,37 @@ import type { Candidat } from './objets.ts';
 import { lireDonjons, niveauxDonjons, nomDonjon } from './donjons.ts';
 import { lireFiche } from './wowf.ts';
 
-const UTILES: Stat[] = ['agi', 'for', 'end', 'pa', 'crit', 'tou', 'hate', 'exp', 'def', 'esq', 'par', 'armure', 'pa_mv', 'pa_hum', 'pa_bete', 'pa_dem'];
-const EFFET_UTILE = /attaque|agilité|force|armure|esquive|critique|toucher|dégâts physiques|vitesse d'attaque|vitesse de déplacement|forme/i;
+// Stats qui servent à au moins une spécialisation du druide (félin, ours, équilibre, restauration).
+const UTILES: Stat[] = [
+  'agi', 'for', 'end', 'pa', 'crit', 'tou', 'hate', 'exp', 'def', 'esq', 'par', 'armure', 'pa_mv', 'pa_hum', 'pa_bete', 'pa_dem',
+  'int', 'esp', 'pds', 'soins', 'dsorts', 'mp5', 'dnature', 'darcane', 'penet',
+];
+const EFFET_UTILE = /attaque|agilité|force|armure|esquive|critique|toucher|dégâts physiques|vitesse d'attaque|vitesse de déplacement|forme|sorts|soins|mana|Colère|Feu stellaire|Éclat lunaire|Toucher guérisseur|Récupération|Rétablissement/i;
 
 export interface Bilan { gardes: number; ecartes: Record<string, number> }
 
-const IDOLE_FERALE = /félin|ours|forme de chat|Griffe|Lambeau|Mutilation|Déchiqueter|Rugissement|Morsure|farouche|rage|énergie/i;
-
 function utile(c: Candidat): boolean {
-  if (c.emplacement === 'relique') return c.effets.some((e) => IDOLE_FERALE.test(e.texte) && !e.texte.includes('$'));
+  // Idoles : toutes celles dont l'effet est lisible (les runes de Saison de la découverte n'existent pas sur Forever).
+  if (c.emplacement === 'relique') return c.effets.some((e) => !e.texte.includes('$') && !/^Grave sur/.test(e.texte));
   if (c.arme) return true;
   if (UTILES.some((s) => (c.stats[s] ?? 0) > 0)) return true;
   return c.effets.some((e) => EFFET_UTILE.test(e.texte));
+}
+
+/**
+ * Effets permanents (« Équipé : ») qui sont en fait des stats sur les objets classiques :
+ * puissance des sorts et mana toutes les 5 s. Les effets temporaires (« pendant N s ») ne comptent pas.
+ */
+function statsDesEffets(effets: Objet['effets']): Partial<Record<Stat, number>> {
+  const s: Partial<Record<Stat, number>> = {};
+  for (const e of effets) {
+    if (e.type !== 1 || /pendant \d/.test(e.texte)) continue;
+    const pds = e.texte.match(/Augmente les dégâts (?:infligés )?et les soins (?:produits|prodigués) par les sorts et effets magiques (?:de |d’un maximum de |d'un maximum de )?(\d+)/);
+    if (pds) s.pds = (s.pds ?? 0) + Number(pds[1]);
+    const mana = e.texte.match(/^Rend (\d+) points? de mana toutes les 5 s/);
+    if (mana) s.mp5 = (s.mp5 ?? 0) + Number(mana[1]);
+  }
+  return s;
 }
 
 export function construire(build: string): Bilan {
@@ -35,7 +54,7 @@ export function construire(build: string): Bilan {
   const objets: Objet[] = [];
 
   for (const c of candidats) {
-    if (!utile(c)) { ecarter('sans stat utile au féral'); continue; }
+    if (!utile(c)) { ecarter('sans stat utile au druide'); continue; }
     const fiche = lireFiche(c.id);
     const enDonjon = donjons.get(c.id) ?? [];
     let sources: Source[];
@@ -57,12 +76,14 @@ export function construire(build: string): Bilan {
     // Butin du monde seul, bleu ou violet : trop rare pour compter dessus.
     if (sources.every((s) => s.type === 'monde') && c.q >= 3) { ecarter('butin du monde improbable'); continue; }
 
+    // Dégâts exacts de wowf.io quand la fiche existe ; sinon la formule (corrigée pour les armes de lanceur).
     let arme = c.arme;
     if (arme && fiche?.arme) arme = { ...fiche.arme, sous: arme.sous };
-    else if (arme && c.lanceur) { ecarter('bâton de lanceur non vérifié'); continue; }
 
     const nos = c.effets.filter((e) => !e.texte.includes('$'));
     const effets = nos.length >= c.effets.length && nos.length ? nos : fiche?.effets.length ? fiche.effets : nos;
+    const stats = { ...c.stats };
+    for (const [k, v] of Object.entries(statsDesEffets(effets)) as [Stat, number][]) stats[k] = (stats[k] ?? 0) + v;
 
     // Sur Forever, beaucoup de récompenses de quête n'ont pas de niveau requis : on prend celui de la quête,
     // sinon une estimation d'après le niveau d'objet (≈ niveau d'objet − 5 dans le jeu classique).
@@ -88,7 +109,7 @@ export function construire(build: string): Bilan {
     const maroquinier = c.liaison === 1 && sources.some((s) => s.type === 'metier' && /cuir/i.test(s.lieu));
     objets.push({
       id: c.id, nom: c.nom, nomEn: c.nomEn, q: c.q, ilvl: c.ilvl, niveau, niveauType, liaison: c.liaison, unique: c.unique,
-      emplacement: c.emplacement, inv: c.inv, stats: c.stats, armure: c.armure, arme, effets, icone: c.icone, sources,
+      emplacement: c.emplacement, inv: c.inv, matiere: c.matiere, stats, armure: c.armure, arme, effets, icone: c.icone, sources,
       maroquinier: maroquinier || undefined,
     });
   }
@@ -99,16 +120,28 @@ export function construire(build: string): Bilan {
   return { gardes: objets.length, ecartes };
 }
 
-/** Icônes 56 px depuis le CDN d'images de Wowhead, copiées dans public/icons. */
+/**
+ * Icônes 56 px copiées dans public/icons : d'abord le CDN d'images de Wowhead (par nom),
+ * sinon celui de Blizzard (par numéro de fichier, comme l'armurerie).
+ */
 export async function telechargerIcones(): Promise<void> {
   const d = lireJson<Donnees>(path.join(PUBLIC, 'data', 'objets.json'));
+  const numeros = new Map<string, number>();
+  for (const c of lireJson<Candidat[]>(path.join(CACHE, 'candidats.json'))) if (c.icone && c.iconeId) numeros.set(c.icone, c.iconeId);
   const noms = [...new Set(d.objets.map((o) => o.icone).filter((i): i is string => !!i))];
   const manquantes = noms.filter((n) => !fs.existsSync(path.join(PUBLIC, 'icons', `${n}.jpg`)));
   if (manquantes.length) console.log(`Icônes : ${manquantes.length} à télécharger`);
   const absentes: string[] = [];
   for (const n of manquantes) {
-    const ok = await telecharger(`https://wow.zamimg.com/images/wow/icons/large/${n}.jpg`, path.join(PUBLIC, 'icons', `${n}.jpg`));
-    if (!ok) absentes.push(n);
+    const f = path.join(PUBLIC, 'icons', `${n}.jpg`);
+    try {
+      let ok = await telecharger(`https://wow.zamimg.com/images/wow/icons/large/${n}.jpg`, f);
+      const num = numeros.get(n);
+      if (!ok && num) ok = await telecharger(`https://render.worldofwarcraft.com/forever-eu/icons/56/${num}.jpg`, f);
+      if (!ok) absentes.push(n);
+    } catch {
+      absentes.push(n);
+    }
     await attendre(80);
   }
   if (absentes.length) console.warn('Icônes introuvables :', absentes.join(' '));

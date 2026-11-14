@@ -2,7 +2,9 @@
 import type { Emplacement, Faction, Stat, TypeSource } from './types.ts';
 import { ORDRE_SOURCES } from './libelles.ts';
 
-export type Role = 'chat' | 'ours';
+export type Role = 'chat' | 'ours' | 'equilibre' | 'resto';
+export const ROLES: Role[] = ['chat', 'ours', 'equilibre', 'resto'];
+export type Matiere = 'cuir' | 'tissu';
 export type Vue = 'ensemble' | 'objets';
 export type Tri = 'valeur' | 'niveau' | 'ilvl' | 'nom';
 
@@ -12,6 +14,8 @@ export interface Etat {
   role: Role;
   faction: Faction | 'toutes';
   maroquinier: boolean;
+  /** Matières d'armure acceptées (le druide porte le cuir et le tissu). */
+  matieres: Matiere[];
   sources: TypeSource[];
   qualites: number[];
   hvSeulement: boolean;
@@ -34,6 +38,7 @@ export const DEFAUT: Etat = {
   role: 'chat',
   faction: 'toutes',
   maroquinier: false,
+  matieres: ['cuir', 'tissu'],
   sources: ORDRE_SOURCES.filter((s) => s !== 'autre'),
   qualites: [2, 3, 4, 5],
   hvSeulement: false,
@@ -61,7 +66,8 @@ function nettoyer(e: Partial<Etat>): Etat {
     niveau: borner(Number(e.niveau ?? DEFAUT.niveau), 1, 60),
     avance: borner(Number(e.avance ?? 0), 0, 10),
     ecart: borner(Number(e.ecart ?? 0), 0, 59),
-    role: e.role === 'ours' ? 'ours' : 'chat',
+    role: e.role && ROLES.includes(e.role) ? e.role : 'chat',
+    matieres: (e.matieres ?? DEFAUT.matieres).filter((m): m is Matiere => m === 'cuir' || m === 'tissu'),
     vue: e.vue === 'objets' ? 'objets' : 'ensemble',
   };
 }
@@ -78,6 +84,7 @@ export function lireEtat(): Etat {
     role: (p.get('role') as Role) ?? undefined,
     faction: (p.get('fac') as Etat['faction']) ?? undefined,
     maroquinier: p.has('cuir') ? p.get('cuir') === '1' : undefined,
+    matieres: liste('mat') as Matiere[] | undefined,
     sources: liste('src') as TypeSource[] | undefined,
     qualites: liste('q')?.map(Number),
     hvSeulement: p.has('hv') ? p.get('hv') === '1' : undefined,
@@ -104,6 +111,7 @@ export function ecrireEtat(e: Etat): void {
   if (e.role !== DEFAUT.role) p.set('role', e.role);
   if (e.faction !== DEFAUT.faction) p.set('fac', e.faction);
   if (e.maroquinier) p.set('cuir', '1');
+  if (!egal(e.matieres, DEFAUT.matieres)) p.set('mat', e.matieres.join(','));
   if (!egal(e.sources, DEFAUT.sources)) p.set('src', e.sources.join(','));
   if (!egal(e.qualites, DEFAUT.qualites)) p.set('q', e.qualites.join(','));
   if (e.hvSeulement) p.set('hv', '1');
