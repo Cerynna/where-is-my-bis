@@ -1,6 +1,6 @@
 // Valeur d'un objet pour un druide farouche, et filtres communs aux deux vues.
 import type { Etat, Role } from './etat.ts';
-import type { Emplacement, Objet, Stat } from './types.ts';
+import type { Emplacement, Objet, Perso, Stat } from './types.ts';
 
 type Poids = Partial<Record<Stat, number>> & { dps: number; armureBase: number };
 
@@ -71,9 +71,26 @@ export type Case = 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets' | '
 
 export type Ensemble = Record<Case, Objet | null>;
 
-/** Le meilleur objet portable à ce niveau pour chaque case de la fiche de personnage. */
-export function meilleurEnsemble(objets: Objet[], e: Etat): Ensemble {
-  const portables = objets.filter((o) => o.niveau <= e.niveau && passeCommun(o, e));
+/** Objets portés par le personnage importé (versions de la base quand elles existent). */
+export function objetsPortes(perso: Perso | null, parId: Map<number, Objet>): Objet[] {
+  if (!perso) return [];
+  return Object.values(perso.equipement).map((p) => {
+    const b = parId.get(p.id);
+    // Les stats de l'armurerie font foi (suffixes aléatoires « du sanglier »…), la base donne la provenance.
+    return b ? { ...b, nom: p.nom, stats: p.stats, armure: p.armure, arme: p.arme ?? b.arme } : p;
+  });
+}
+
+/**
+ * Le meilleur objet portable à ce niveau pour chaque case de la fiche de personnage.
+ * Les objets que le personnage porte déjà concourent aussi, sans passer par les filtres.
+ */
+export function meilleurEnsemble(objets: Objet[], e: Etat, portes: Objet[] = []): Ensemble {
+  const idsPortes = new Set(portes.map((o) => o.id));
+  const portables = [
+    ...objets.filter((o) => !idsPortes.has(o.id) && o.niveau <= e.niveau && passeCommun(o, e)),
+    ...portes,
+  ];
   const par = (emp: Emplacement[]) => portables
     .filter((o) => emp.includes(o.emplacement))
     .sort((a, b) => valeur(b, e.role) - valeur(a, e.role));
@@ -87,4 +104,59 @@ export function meilleurEnsemble(objets: Objet[], e: Etat): Ensemble {
     doigt1: bagues[0] ?? null, doigt2: bagues[1] ?? null, bijou1: bijoux[0] ?? null, bijou2: bijoux[1] ?? null,
     arme: par(['arme2m', 'arme1m'])[0] ?? null, relique: premier('relique'),
   };
+}
+
+export type Statut =
+  | { type: 'porte' }
+  | { type: 'mieux'; remplace: Objet | null; gain: number }
+  | { type: 'aucun' };
+
+/**
+ * Pour chaque case : l'objet conseillé est-il déjà porté, ou que remplace-t-il ?
+ * Bagues et bijoux : la meilleure nouvelle pièce remplace la plus faible des pièces portées.
+ */
+export function comparer(ens: Ensemble, perso: Perso | null, portes: Objet[], role: Role): Partial<Record<Case, Statut>> {
+  const res: Partial<Record<Case, Statut>> = {};
+  if (!perso) return res;
+  const ids = new Set(portes.map((o) => o.id));
+  const parCase = new Map<string, Objet>();
+  for (const [c, p] of Object.entries(perso.equipement)) {
+    const o = portes.find((x) => x.id === p.id);
+    if (o) parCase.set(c, o);
+  }
+  const statut = (o: Objet | null, ancien: Objet | null): Statut => {
+    if (!o) return { type: 'aucun' };
+    if (ids.has(o.id)) return { type: 'porte' };
+    const v = valeur(o, role);
+    const va = ancien ? valeur(ancien, role) : 0;
+    // Gain infini : la pièce remplacée n'a aucune stat utile (sacoche, bijou de métier…).
+    return { type: 'mieux', remplace: ancien, gain: va > 0 ? (v - va) / va : Number.POSITIVE_INFINITY };
+  };
+  for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'relique'] as Case[]) {
+    res[c] = statut(ens[c], parCase.get(c) ?? null);
+  }
+  for (const [a, b] of [['doigt1', 'doigt2'], ['bijou1', 'bijou2']] as [Case, Case][]) {
+    const choisis = [ens[a], ens[b]];
+    const nouveaux = choisis.filter((o): o is Objet => !!o && !ids.has(o.id));
+    const restants = [parCase.get(a), parCase.get(b)]
+      .filter((o): o is Objet => !!o && !choisis.some((x) => x?.id === o.id))
+      .sort((x, y) => valeur(x, role) - valeur(y, role));
+    for (const c of [a, b]) {
+      const o = ens[c];
+      if (!o) { res[c] = { type: 'aucun' }; continue; }
+      if (ids.has(o.id)) { res[c] = { type: 'porte' }; continue; }
+      res[c] = statut(o, restants[nouveaux.indexOf(o)] ?? null);
+    }
+  }
+  return res;
+}
+
+/** Valeur de la pièce portée la plus faible pour ce type d'emplacement (0 si vide). */
+export function valeurPortee(portes: Objet[], emplacement: Emplacement, role: Role): number | null {
+  if (!portes.length) return null;
+  const groupe: Emplacement[] = emplacement === 'arme2m' || emplacement === 'arme1m' ? ['arme2m', 'arme1m'] : [emplacement];
+  const v = portes.filter((o) => groupe.includes(o.emplacement)).map((o) => valeur(o, role));
+  const attendu = emplacement === 'doigt' || emplacement === 'bijou' ? 2 : 1;
+  if (v.length < attendu) return 0;
+  return Math.min(...v);
 }

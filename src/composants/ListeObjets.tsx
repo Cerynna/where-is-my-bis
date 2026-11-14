@@ -2,15 +2,19 @@ import { useMemo, useState } from 'react';
 import type { Etat } from '../etat.ts';
 import { nombre } from '../libelles.ts';
 import type { Objet } from '../types.ts';
-import { meilleurEnsemble, passeListe, valeur } from '../valeur.ts';
+import { meilleurEnsemble, passeListe, valeur, valeurPortee } from '../valeur.ts';
 import { Ligne } from './Ensemble.tsx';
 
 const PAGE = 80;
 
-export function ListeObjets({ objets, etat }: { objets: Objet[]; etat: Etat }) {
+export function ListeObjets({ objets, etat, portes }: { objets: Objet[]; etat: Etat; portes: Objet[] }) {
   const [max, setMax] = useState(PAGE);
   const resultats = useMemo(() => {
-    const l = objets.filter((o) => passeListe(o, etat));
+    let l = objets.filter((o) => passeListe(o, etat));
+    if (etat.ameliorations && portes.length) {
+      const ids = new Set(portes.map((p) => p.id));
+      l = l.filter((o) => !ids.has(o.id) && valeur(o, etat.role) > (valeurPortee(portes, o.emplacement, etat.role) ?? 0));
+    }
     const tri: Record<Etat['tri'], (a: Objet, b: Objet) => number> = {
       valeur: (a, b) => valeur(b, etat.role) - valeur(a, etat.role),
       niveau: (a, b) => b.niveau - a.niveau || valeur(b, etat.role) - valeur(a, etat.role),
@@ -18,17 +22,18 @@ export function ListeObjets({ objets, etat }: { objets: Objet[]; etat: Etat }) {
       nom: (a, b) => a.nom.localeCompare(b.nom, 'fr'),
     };
     return l.sort(tri[etat.tri]);
-  }, [objets, etat]);
+  }, [objets, etat, portes]);
   const choisis = useMemo(() => {
-    const ens = meilleurEnsemble(objets, etat);
+    const ens = meilleurEnsemble(objets, etat, portes);
     return new Set(Object.values(ens).filter(Boolean).map((o) => o!.id));
-  }, [objets, etat]);
+  }, [objets, etat, portes]);
 
   return (
     <section aria-labelledby="h-liste">
       <h2 id="h-liste">Base d’objets</h2>
       <p className="sous-titre" aria-live="polite">
         {nombre(resultats.length)} objet{resultats.length > 1 ? 's' : ''} correspondent aux filtres
+        {etat.ameliorations && portes.length ? ', tous meilleurs que ce que tu portes' : ''}
         {etat.avance ? `, dont ceux des ${etat.avance} niveaux suivants (grisés)` : ''}.
       </p>
       {resultats.length === 0 ? (
@@ -36,7 +41,7 @@ export function ListeObjets({ objets, etat }: { objets: Objet[]; etat: Etat }) {
       ) : (
         <ul className="liste">
           {resultats.slice(0, max).map((o) => (
-            <Ligne key={o.id} o={o} choisi={choisis.has(o.id)} etat={etat} avecEmplacement />
+            <Ligne key={o.id} o={o} choisi={choisis.has(o.id)} etat={etat} portes={portes} avecEmplacement />
           ))}
         </ul>
       )}

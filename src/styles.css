@@ -113,9 +113,11 @@ input[type="search"], select { width: 100%; background: var(--bg); border: 1px s
 .icone.q5 { border-color: color-mix(in srgb, var(--q5) 80%, #000); }
 .q2 { color: var(--q2); } .q3 { color: var(--q3); } .q4 { color: var(--q4); } .q5 { color: var(--q5); }
 
-/* Bouton survolable */
-.survol { all: unset; box-sizing: border-box; cursor: help; font: inherit; color: inherit; border-radius: var(--r); min-width: 0; }
-.survol:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Zone survolable et nom d'objet en lien vers Wowhead */
+.survol { box-sizing: border-box; cursor: help; border-radius: var(--r); min-width: 0; }
+.nom-objet { text-decoration: none; cursor: pointer; }
+.nom-objet:hover { text-decoration: underline; text-underline-offset: 3px; }
+.nom-objet:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
 /* Fiche de personnage */
 .fiche { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -175,6 +177,34 @@ input[type="search"], select { width: 100%; background: var(--bg); border: 1px s
 .ib-sep { height: 1px; background: rgba(255, 255, 255, 0.12); margin: 6px 0; }
 .ib-src { color: var(--tip-gold); }
 .ib-det { color: #cfd3dc; }
+
+/* Personnage importé */
+.perso { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 14px; margin-bottom: 14px; display: grid; gap: 6px; }
+.perso h2 { font-size: 1.1rem; }
+.perso form { display: grid; gap: 8px; }
+.perso label { font-size: 0.88rem; color: var(--muted); }
+.perso input[type="url"] { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 9px; font-size: 0.85rem; }
+.perso button:not(.lien) { justify-self: start; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: var(--r); padding: 6px 14px; font-weight: 700; cursor: pointer; }
+.perso button:disabled { opacity: 0.6; cursor: progress; }
+.perso p { margin: 0; }
+.perso-nom { font-family: var(--font-d); font-size: 1.2rem; color: var(--accent); }
+.perso-infos { font-size: 0.9rem; }
+.perso-date { font-size: 0.8rem; color: var(--muted); }
+.perso-actions { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 4px; }
+.perso-alerte { font-size: 0.85rem; color: var(--c-metier); }
+.perso-erreur { font-size: 0.85rem; color: var(--tip-red); }
+
+/* Comparaison avec l'équipement porté */
+.statut { font-size: 0.8rem; font-weight: 700; margin-top: 2px; }
+.statut.porte { color: var(--c-donjon); }
+.statut.mieux { color: var(--accent); }
+.fiche .survol.case.a-changer { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.badge.porte { color: var(--c-donjon); }
+.badge.mieux { color: var(--accent); }
+.ligne.porte { box-shadow: inset 3px 0 0 var(--c-donjon); }
+.ib-diff { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.q0 { color: var(--tip-grey); } .q1 { color: #fff; }
+.icone.q0, .icone.q1 { border-color: #555; }
 
 /* Pied de page */
 .pied { max-width: 1400px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); color: var(--muted); font-size: 0.85rem; }

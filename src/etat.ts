@@ -24,6 +24,8 @@ export interface Etat {
   /** Cacher les objets de plus de N niveaux sous le mien (0 = tout montrer). */
   ecart: number;
   tri: Tri;
+  /** Base d'objets : seulement ce qui bat ce que porte le personnage importé. */
+  ameliorations: boolean;
 }
 
 export const DEFAUT: Etat = {
@@ -42,6 +44,7 @@ export const DEFAUT: Etat = {
   avance: 0,
   ecart: 0,
   tri: 'valeur',
+  ameliorations: false,
 };
 
 const CLE = 'feral-forever:etat';
@@ -85,6 +88,7 @@ export function lireEtat(): Etat {
     avance: p.has('avance') ? Number(p.get('avance')) : undefined,
     ecart: p.has('ecart') ? Number(p.get('ecart')) : undefined,
     tri: (p.get('tri') as Tri) ?? undefined,
+    ameliorations: p.has('mieux') ? p.get('mieux') === '1' : undefined,
   };
   // Un lien partagé décrit tout l'état : on n'y mêle pas les réglages gardés dans ce navigateur.
   const defini = Object.fromEntries(Object.entries(depuisUrl).filter(([, v]) => v !== undefined)) as Partial<Etat>;
@@ -110,5 +114,6 @@ export function ecrireEtat(e: Etat): void {
   if (e.avance) p.set('avance', String(e.avance));
   if (e.ecart) p.set('ecart', String(e.ecart));
   if (e.tri !== DEFAUT.tri) p.set('tri', e.tri);
+  if (e.ameliorations) p.set('mieux', '1');
   history.replaceState(null, '', `${location.pathname}?${p.toString()}${location.hash}`);
 }

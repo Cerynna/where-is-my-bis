@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ecrirePerso, lirePerso } from './armurerie.ts';
 import { Ensemble } from './composants/Ensemble.tsx';
 import { Filtres } from './composants/Filtres.tsx';
 import { FournisseurInfobulle } from './composants/Infobulle.tsx';
 import { ListeObjets } from './composants/ListeObjets.tsx';
+import { PersoPanneau } from './composants/PersoPanneau.tsx';
 import { ecrireEtat, lireEtat, type Etat } from './etat.ts';
 import { nombre } from './libelles.ts';
-import type { Donnees, TypeSource } from './types.ts';
+import type { Donnees, Objet, Perso, TypeSource } from './types.ts';
+import { objetsPortes } from './valeur.ts';
 
 export function App() {
   const [donnees, setDonnees] = useState<Donnees | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [etat, setEtat] = useState<Etat>(lireEtat);
+  const [perso, setPerso] = useState<Perso | null>(lirePerso);
 
   useEffect(() => {
     fetch('./data/objets.json', { cache: 'no-cache' })
@@ -20,6 +24,17 @@ export function App() {
   }, []);
   useEffect(() => { ecrireEtat(etat); }, [etat]);
   const maj = useCallback((p: Partial<Etat>) => setEtat((e) => ({ ...e, ...p })), []);
+
+  const surImport = useCallback((p: Perso) => {
+    setPerso(p);
+    ecrirePerso(p);
+    // Les réglages suivent le personnage : niveau, faction, travail du cuir.
+    setEtat((e) => ({ ...e, niveau: Math.min(60, Math.max(1, p.niveau)), faction: p.faction ?? e.faction, maroquinier: p.maroquinier }));
+  }, []);
+  const surOubli = useCallback(() => { setPerso(null); ecrirePerso(null); }, []);
+
+  const parId = useMemo(() => new Map<number, Objet>((donnees?.objets ?? []).map((o) => [o.id, o])), [donnees]);
+  const portes = useMemo(() => objetsPortes(perso, parId), [perso, parId]);
 
   const { lieux, comptes } = useMemo(() => {
     const lieux = new Set<string>();
@@ -32,7 +47,7 @@ export function App() {
   }, [donnees]);
 
   return (
-    <FournisseurInfobulle etat={etat}>
+    <FournisseurInfobulle etat={etat} portes={portes}>
       <header className="entete">
         <div className="entete-int">
           <div className="marque">
@@ -48,23 +63,24 @@ export function App() {
 
       <div className="page">
         <aside className="cote">
+          <PersoPanneau key={perso?.importeLe ?? 'aucun'} perso={perso} surImport={surImport} surOubli={surOubli} />
           <details className="tiroir" open>
             <summary>Réglages et filtres</summary>
-            <Filtres etat={etat} maj={maj} lieux={lieux} comptes={comptes} />
+            <Filtres etat={etat} maj={maj} lieux={lieux} comptes={comptes} avecPerso={!!perso} />
           </details>
         </aside>
         <main className="contenu">
           {erreur && <p className="erreur">Impossible de charger les objets ({erreur}).</p>}
           {!donnees && !erreur && <p className="chargement">Chargement des objets…</p>}
-          {donnees && etat.vue === 'ensemble' && <Ensemble objets={donnees.objets} etat={etat} />}
-          {donnees && etat.vue === 'objets' && <ListeObjets key={JSON.stringify(etat)} objets={donnees.objets} etat={etat} />}
+          {donnees && etat.vue === 'ensemble' && <Ensemble objets={donnees.objets} etat={etat} perso={perso} portes={portes} />}
+          {donnees && etat.vue === 'objets' && <ListeObjets key={JSON.stringify(etat)} objets={donnees.objets} etat={etat} portes={portes} />}
         </main>
       </div>
 
       <footer className="pied">
         <p>
           {donnees ? `${nombre(donnees.objets.length)} objets · build du jeu ${donnees.build} · données du ${new Date(donnees.genere).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}. ` : ''}
-          Stats lues dans les fichiers du jeu et le cache des objets révélés ; provenance d’après <a href="https://wowf.io" target="_blank" rel="noopener">wowf.io</a> ; icônes de Wowhead.
+          Stats lues dans les fichiers du jeu et le cache des objets révélés ; provenance d’après <a href="https://wowf.io" target="_blank" rel="noopener">wowf.io</a> ; fiches et icônes de <a href="https://www.wowhead.com/forever" target="_blank" rel="noopener">Wowhead</a>.
           Les butins du monde bleus et violets ne sont pas listés : trop rares pour compter dessus.
         </p>
         <p>Site de fan, non affilié à Blizzard Entertainment.</p>

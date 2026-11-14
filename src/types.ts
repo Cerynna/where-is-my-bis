@@ -48,8 +48,8 @@ export interface Objet {
   id: number;
   nom: string;
   nomEn?: string;
-  /** Qualité du jeu : 2 inhabituel, 3 rare, 4 épique, 5 légendaire */
-  q: 2 | 3 | 4 | 5;
+  /** Qualité du jeu : 0 médiocre, 1 commun, 2 inhabituel, 3 rare, 4 épique, 5 légendaire */
+  q: 0 | 1 | 2 | 3 | 4 | 5;
   ilvl: number;
   /** Niveau à partir duquel l'objet est accessible (niveau requis, sinon celui de la quête, sinon estimé). */
   niveau: number;
@@ -66,10 +66,29 @@ export interface Objet {
   armure: number;
   arme?: Arme;
   effets: Effet[];
+  /** Nom de l'icône dans public/icons, ou adresse complète (objets portés hors de la base). */
   icone?: string;
   sources: Source[];
   /** Pièce de travail du cuir liée quand ramassée : seul l'artisan peut la porter. */
   maroquinier?: boolean;
+}
+
+/** Personnage importé depuis l'armurerie. */
+export interface Perso {
+  lien: string;
+  nom: string;
+  royaume?: string;
+  niveau: number;
+  classe: string;
+  estDruide: boolean;
+  faction?: Faction;
+  specialisation?: string;
+  maroquinier: boolean;
+  /** Date de la dernière mise à jour de l'armurerie (ISO). */
+  majArmurerie?: string;
+  importeLe: string;
+  /** Objets portés, par case de la fiche (tete, doigt1, bijou2, arme, relique…). */
+  equipement: Record<string, Objet>;
 }
 
 export interface Donnees {

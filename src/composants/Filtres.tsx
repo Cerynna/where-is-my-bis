@@ -8,13 +8,14 @@ interface Props {
   maj: (p: Partial<Etat>) => void;
   lieux: string[];
   comptes: Partial<Record<TypeSource, number>>;
+  avecPerso: boolean;
 }
 
 function basculer<T>(liste: T[], v: T): T[] {
   return liste.includes(v) ? liste.filter((x) => x !== v) : [...liste, v];
 }
 
-export function Filtres({ etat, maj, lieux, comptes }: Props) {
+export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
   const liste = etat.vue === 'objets';
   return (
     <div className="filtres">
@@ -88,6 +89,12 @@ export function Filtres({ etat, maj, lieux, comptes }: Props) {
             <legend>Recherche</legend>
             <input id="recherche" type="search" placeholder="Nom de l’objet (français ou anglais)" value={etat.recherche}
               onChange={(e) => maj({ recherche: e.target.value })} />
+            {avecPerso && (
+              <label className="coche">
+                <input id="cb-ameliorations" type="checkbox" checked={etat.ameliorations} onChange={(e) => maj({ ameliorations: e.target.checked })} />
+                Seulement les améliorations de mon équipement
+              </label>
+            )}
           </fieldset>
 
           <fieldset className="grille-2">

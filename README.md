@@ -14,6 +14,16 @@ Le site a deux vues :
 
 Les réglages sont gardés dans l'adresse, ce qui permet de partager un lien.
 
+Chaque nom d'objet ouvre sa fiche Wowhead (WoW Forever, en français) dans un nouvel onglet.
+
+### Comparer avec son personnage
+
+On colle le lien de son personnage sur l'armurerie WoW Forever, par exemple `https://worldofwarcraft.blizzard.com/fr-fr/forever/eu/armory/character/<nom>-<nom-de-famille>`. Le site importe alors le niveau, la faction, le travail du cuir et l'équipement porté.
+
+Le site marque ensuite chaque pièce : portée, amélioration (+x %) ou emplacement vide. L'infobulle compare chaque objet à la pièce portée. La base d'objets peut ne montrer que les améliorations.
+
+L'armurerie refuse les requêtes venues d'un autre site (CORS). La page passe donc par le relais `/armurerie`, qui renvoie vers `https://worldofwarcraft.blizzard.com`. Ce relais est fourni par le proxy de Vite (`npm run dev` et `npm run preview`). Un hébergement statique devra le reproduire par une règle de réécriture vers cette adresse.
+
 ## Commandes
 
 ```bash

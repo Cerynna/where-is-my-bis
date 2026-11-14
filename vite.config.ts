@@ -16,10 +16,23 @@ function rechargerDonnees(): Plugin {
   };
 }
 
+// L'armurerie de Blizzard refuse les requêtes d'un autre site (CORS) : le serveur la relaie sous /armurerie.
+const relaisArmurerie = {
+  '/armurerie': {
+    target: 'https://worldofwarcraft.blizzard.com',
+    changeOrigin: true,
+    rewrite: (p: string) => p.replace(/^\/armurerie/, ''),
+  },
+};
+
 // Site statique : tout est servi depuis dist/, les données et les icônes depuis public/.
 export default defineConfig({
   plugins: [react(), rechargerDonnees()],
   base: './',
-  // Le cache des scripts de données change sans cesse pendant un téléchargement : rien à recharger.
-  server: { watch: { ignored: ['**/.cache/**'] } },
+  server: {
+    proxy: relaisArmurerie,
+    // Le cache des scripts de données change sans cesse pendant un téléchargement : rien à recharger.
+    watch: { ignored: ['**/.cache/**'] },
+  },
+  preview: { proxy: relaisArmurerie },
 });
