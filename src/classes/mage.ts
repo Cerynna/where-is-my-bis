@@ -12,10 +12,10 @@ const BILAN_COMMUN: [Stat, string][] = [
 export const SPECS_MAGE: Specialisation[] = [
   {
     // Gros consommateur de mana : Intelligence, Esprit et mana/5 pèsent plus qu'en Feu ou en Givre.
-    // On monte souvent en Éclair de givre avant d'avoir les gros sorts d'Arcanes : un peu de dégâts de Givre.
+    // Chaque spé ne compte que les dégâts de son école : pas de Givre ni de Feu ici.
     id: 'arcanes', nom: 'Arcanes', libelle: 'arcanes (dégâts)', physique: false, armurerie: /arcane/i,
     poids: {
-      pds: 1, dsorts: 1, darcane: 0.85, dgivre: 0.2, int: 0.7, esp: 0.3, mp5: 0.7, crit: 0.7, tou: 1, hate: 0.9,
+      pds: 1, dsorts: 1, darcane: 0.85, int: 0.7, esp: 0.3, mp5: 0.7, crit: 0.7, tou: 1, hate: 0.9,
       penet: 0.3, end: 0.05, dps: 0, dpsDistance: 0.6, armureBase: 0,
     },
     reliques: /Projectiles des Arcanes|Explosion des Arcanes|Déflagration des Arcanes|Puissance des Arcanes|Intelligence des Arcanes|Évocation|Bouclier de mana|Présence spirituelle|Métamorphose|Transfert|Contresort/i,
