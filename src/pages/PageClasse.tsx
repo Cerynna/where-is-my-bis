@@ -13,6 +13,7 @@ import { PersoPanneau } from '../composants/PersoPanneau.tsx';
 import { ecrireEtat, lireEtat, type Etat, type Vue } from '../etat.ts';
 import type { Donnees, Emplacement, Objet, Perso, TypeSource } from '../types.ts';
 import { objetsPortes } from '../valeur.ts';
+import { IconeSpe } from '../composants/IconeSpe.tsx';
 import { Introuvable } from './Introuvable.tsx';
 
 export function PageClasse({ vue }: { vue: Vue }) {
@@ -91,8 +92,9 @@ function ContenuClasse({ classe, vue }: { classe: Classe; vue: Vue }) {
             <div className="bandeau-titre">
               <img src={cheminPublic(`icons/classes/${classe.icone}.jpg`)} alt="" width={40} height={40} />
               <div>
-                <span className="sur-titre">{classe.specs.map((s) => s.nom).join(' · ')}</span>
                 <h1>{classe.nom}</h1>
+                {/* Spé choisie, avec l'icône de son arbre de talents */}
+                <span className="bandeau-spe"><IconeSpe spe={spe} taille={18} />{spe.nom}</span>
               </div>
             </div>
             <nav className="onglets" aria-label="Vues">

@@ -19,19 +19,19 @@ const BASE = {
 
 export const SPECS_CHASSEUR: Specialisation[] = [
   {
-    id: 'betes', nom: 'Maîtrise des bêtes', libelle: 'maîtrise des bêtes (dégâts)', physique: true, armurerie: /b[êe]tes/i, ambidextre: true, armesDistance: TIR,
+    id: 'betes', icone: 'ability_hunter_beasttaming', nom: 'Maîtrise des bêtes', libelle: 'maîtrise des bêtes (dégâts)', physique: true, armurerie: /b[êe]tes/i, ambidextre: true, armesDistance: TIR,
     poids: { ...BASE, agi: 2.2, crit: 1.6, tou: 2.2, hate: 1.5 },
     reliques: RELIQUES, filtre: FILTRE, bilan: BILAN,
     note: 'Ton arme à distance fait l’essentiel des dégâts : son DPS compte autant que l’Agilité. Les armes de mêlée ne servent que pour leurs stats.',
   },
   {
-    id: 'precision', nom: 'Précision', libelle: 'précision (dégâts)', physique: true, armurerie: /pr[ée]cision/i, ambidextre: true, armesDistance: TIR,
+    id: 'precision', icone: 'ability_marksmanship', nom: 'Précision', libelle: 'précision (dégâts)', physique: true, armurerie: /pr[ée]cision/i, ambidextre: true, armesDistance: TIR,
     poids: { ...BASE, agi: 2.2, crit: 1.9, tou: 2.3, hate: 1.4 },
     reliques: RELIQUES, filtre: FILTRE, bilan: BILAN,
     note: 'Visée et Tir des arcanes partent de ton arme à distance : son DPS d’abord, puis l’Agilité, le toucher et le critique.',
   },
   {
-    id: 'survie', nom: 'Survie', libelle: 'survie (dégâts)', physique: true, armurerie: /survie/i, ambidextre: true, armesDistance: TIR,
+    id: 'survie', icone: 'ability_hunter_swiftstrike', nom: 'Survie', libelle: 'survie (dégâts)', physique: true, armurerie: /survie/i, ambidextre: true, armesDistance: TIR,
     poids: { ...BASE, agi: 2.6, crit: 1.7, tou: 2.2, hate: 1.4, end: 0.6 },
     reliques: RELIQUES, filtre: FILTRE, bilan: BILAN,
     note: 'La Survie tire plus de l’Agilité que les deux autres spés ; ton arme à distance reste la pièce la plus importante.',

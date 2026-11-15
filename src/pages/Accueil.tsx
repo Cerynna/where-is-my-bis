@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { usePerso } from '../App.tsx';
 import { cheminPublic } from '../chemins.ts';
 import { CLASSES, classeParEnum } from '../classes/index.ts';
+import { IconeSpe } from '../composants/IconeSpe.tsx';
 import { PersoPanneau } from '../composants/PersoPanneau.tsx';
 import type { Perso } from '../types.ts';
 
@@ -35,7 +36,11 @@ export function Accueil() {
               <>
                 <img src={cheminPublic(`icons/classes/${c.icone}.jpg`)} alt="" width={48} height={48} />
                 <span className="carte-classe-nom">{c.nom}</span>
-                <span className="carte-classe-specs">{c.actif ? c.specs.map((s) => s.nom).join(' · ') : 'Bientôt'}</span>
+                <span className="carte-classe-specs">
+                  {c.actif
+                    ? c.specs.map((s) => <span key={s.id} className="spe-mini"><IconeSpe spe={s} taille={16} />{s.nom}</span>)
+                    : 'Bientôt'}
+                </span>
               </>
             );
             return (

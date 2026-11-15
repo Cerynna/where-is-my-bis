@@ -2,6 +2,7 @@ import type { Classe } from '../classes/types.ts';
 import { NOMS_MATIERES, type Matiere } from '../classes/equipement.ts';
 import { specDe } from '../classes/index.ts';
 import type { Etat, Vue } from '../etat.ts';
+import { IconeSpe } from './IconeSpe.tsx';
 import { defaut } from '../etat.ts';
 import { COURT, libelleEmplacement, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES } from '../libelles.ts';
 import type { Emplacement, Stat, TypeSource } from '../types.ts';
@@ -47,7 +48,10 @@ export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, 
           <legend>Spécialisation</legend>
           <div className={`seg${classe.specs.length > 2 ? ' seg-specs' : ''}`}>
             {classe.specs.map((s) => (
-              <button key={s.id} type="button" aria-pressed={etat.role === s.id} onClick={() => maj({ role: s.id, stats: [] })}>{s.nom}</button>
+              <button key={s.id} type="button" aria-pressed={etat.role === s.id} onClick={() => maj({ role: s.id, stats: [] })}>
+                <IconeSpe spe={s} taille={26} />
+                <span>{s.nom}</span>
+              </button>
             ))}
           </div>
         </fieldset>

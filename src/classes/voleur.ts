@@ -16,7 +16,7 @@ const DAGUE = 15;
 
 export const SPECS_VOLEUR: Specialisation[] = [
   {
-    id: 'assassinat', nom: 'Assassinat', libelle: 'assassinat (dégâts)', physique: true, armurerie: /assassinat/i,
+    id: 'assassinat', icone: 'ability_rogue_eviscerate', nom: 'Assassinat', libelle: 'assassinat (dégâts)', physique: true, armurerie: /assassinat/i,
     ambidextre: true, armesMain: [DAGUE],
     poids: { ...BASE, crit: 2.2 },
     reliques: /Attaque sournoise|Mutilation|Embuscade|Éviscération|Envenimer|Poison|Rupture|Garrot|Frappe fatale|Coup bas|énergie|points de combo/i,
@@ -24,14 +24,14 @@ export const SPECS_VOLEUR: Specialisation[] = [
     note: 'Attaque sournoise et Embuscade demandent une dague en main droite : la fiche n’en propose pas d’autre.',
   },
   {
-    id: 'combat', nom: 'Combat', libelle: 'combat (dégâts)', physique: true, armurerie: /combat/i, ambidextre: true,
+    id: 'combat', icone: 'ability_backstab', nom: 'Combat', libelle: 'combat (dégâts)', physique: true, armurerie: /combat/i, ambidextre: true,
     poids: { ...BASE, exp: 2.4, hate: 1.8 },
     reliques: /Attaque pernicieuse|Éviscération|Déluge de lames|Riposte|Poussée d’adrénaline|Coup de pied|Feinte|énergie|points de combo/i,
     filtre: FILTRE, bilan: BILAN,
     note: 'Attaque pernicieuse frappe avec l’arme de main droite : une arme lente et puissante y vaut le plus.',
   },
   {
-    id: 'finesse', nom: 'Finesse', libelle: 'finesse (dégâts)', physique: true, armurerie: /finesse/i,
+    id: 'finesse', icone: 'ability_stealth', nom: 'Finesse', libelle: 'finesse (dégâts)', physique: true, armurerie: /finesse/i,
     ambidextre: true, armesMain: [DAGUE],
     poids: { ...BASE, agi: 2.2 },
     reliques: /Embuscade|Attaque sournoise|Hémorragie|Camouflage|Préparation|Assommer|Coup bas|Cécité|Disparition|énergie|points de combo/i,

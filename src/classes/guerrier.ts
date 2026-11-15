@@ -12,7 +12,7 @@ const BILAN_DEGATS: [Stat, string][] = [
 
 export const SPECS_GUERRIER: Specialisation[] = [
   {
-    id: 'armes', nom: 'Armes', libelle: 'armes (dégâts)', physique: true, armurerie: /armes/i,
+    id: 'armes', icone: 'ability_rogue_eviscerate', nom: 'Armes', libelle: 'armes (dégâts)', physique: true, armurerie: /armes/i,
     poids: {
       for: 2, agi: 1, pa: 1, crit: 2.2, tou: 2.5, exp: 2.2, hate: 1.5, end: 0.4, armure: 0.02, ...PA_CIBLES,
       dps: 14, dpsDistance: 1, armureBase: 0,
@@ -23,7 +23,7 @@ export const SPECS_GUERRIER: Specialisation[] = [
     note: 'Frappe mortelle et Exécution frappent avec ton arme : une arme à deux mains lente et puissante d’abord, puis la Force, le toucher et le critique.',
   },
   {
-    id: 'fureur', nom: 'Fureur', libelle: 'fureur (dégâts)', physique: true, armurerie: /fureur/i, ambidextre: true,
+    id: 'fureur', icone: 'ability_warrior_innerrage', nom: 'Fureur', libelle: 'fureur (dégâts)', physique: true, armurerie: /fureur/i, ambidextre: true,
     poids: {
       for: 2, agi: 1, pa: 1, crit: 2.3, tou: 2.6, exp: 2.2, hate: 1.7, end: 0.4, armure: 0.02, ...PA_CIBLES,
       dps: 14, dpsDistance: 1, armureBase: 0,
@@ -34,7 +34,7 @@ export const SPECS_GUERRIER: Specialisation[] = [
     note: 'En Fureur, tu tapes avec deux armes : celle de main gauche ne frappe qu’à moitié, mais ses stats comptent en entier.',
   },
   {
-    id: 'protection', nom: 'Protection', libelle: 'protection (tank)', physique: true, armurerie: /protection/i,
+    id: 'protection', icone: 'inv_shield_06', nom: 'Protection', libelle: 'protection (tank)', physique: true, armurerie: /protection/i,
     poids: {
       end: 1.6, def: 1.5, esq: 1.6, par: 1.3, sbloc: 1, blocage: 0.6, armure: 0.1, for: 0.6, agi: 0.8, tou: 1, exp: 1, pa: 0.2,
       crit: 0.3, hate: 0.3, rfeu: 0.1, rgivre: 0.1, rombre: 0.1, rnature: 0.1, rarcane: 0.1, dps: 3, dpsDistance: 0.3, armureBase: 0.1,

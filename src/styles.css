@@ -189,9 +189,20 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--sur-accent); font-weight: 700; }
 .seg.seg-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-2); }
 .seg.seg-specs:has(> button:nth-child(3):last-child) { grid-template-columns: repeat(3, 1fr); }
-.seg.seg-specs button { background: var(--panel); border: 0; padding: 7px 6px; line-height: 1.2; }
+/* Spé : icône de l'arbre de talents au-dessus du nom */
+.seg.seg-specs button { background: var(--panel); border: 0; padding: 8px 4px 7px; line-height: 1.15; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .seg.seg-specs button:hover { background: var(--panel-2); }
+.seg.seg-specs button .icone-spe { opacity: 0.7; filter: grayscale(0.5); }
+.seg.seg-specs button:hover .icone-spe { opacity: 1; filter: none; }
 .seg.seg-specs button[aria-pressed="true"] { background: var(--accent); color: var(--sur-accent); }
+.seg.seg-specs button[aria-pressed="true"] .icone-spe { opacity: 1; filter: none; border-color: var(--sur-accent); }
+
+/* Icônes de spé */
+.icone-spe { flex: none; border: 1px solid var(--line-2); border-radius: 2px; vertical-align: middle; background: #000; }
+.spe-mini { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; white-space: nowrap; }
+.spe-mini:last-child { margin-right: 0; }
+.bandeau-spe { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; color: var(--muted); font-size: 0.95rem; }
+.poids-classe dt .icone-spe { margin-right: 4px; position: relative; top: -1px; }
 /* Cases à cocher (provenances, qualités, matières) : une liste simple, la couleur sur le libellé */
 .puces { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 10px; }
 .puce { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; user-select: none; min-width: 0; }

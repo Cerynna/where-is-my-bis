@@ -13,6 +13,11 @@ export const POIDS_HORS_STATS: readonly string[] = ['dps', 'dpsDistance', 'armur
 export interface Specialisation {
   /** Identifiant court, gardé dans l'adresse (role=…). */
   id: string;
+  /**
+   * Icône de la spé (public/icons/specs/<icone>.jpg) : celle de l'arbre de talents dans la table TalentTab
+   * de Forever ; pour le druide félin, la forme de félin (l'arbre Combat farouche a l'icône de l'ours).
+   */
+  icone: string;
   /** Libellé du bouton. */
   nom: string;
   /** Libellé dans les phrases (« félin (dégâts) »). */

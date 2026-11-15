@@ -13,7 +13,7 @@ export const SPECS_MAGE: Specialisation[] = [
   {
     // Gros consommateur de mana : Intelligence, Esprit et mana/5 pèsent plus qu'en Feu ou en Givre.
     // Chaque spé ne compte que les dégâts de son école : pas de Givre ni de Feu ici.
-    id: 'arcanes', nom: 'Arcanes', libelle: 'arcanes (dégâts)', physique: false, armurerie: /arcane/i,
+    id: 'arcanes', icone: 'spell_holy_magicalsentry', nom: 'Arcanes', libelle: 'arcanes (dégâts)', physique: false, armurerie: /arcane/i,
     poids: {
       pds: 1, dsorts: 1, darcane: 0.85, int: 0.7, esp: 0.3, mp5: 0.7, crit: 0.7, tou: 1, hate: 0.9,
       penet: 0.3, end: 0.05, dps: 0, dpsDistance: 0.6, armureBase: 0,
@@ -25,7 +25,7 @@ export const SPECS_MAGE: Specialisation[] = [
   },
   {
     // Presque tous les sorts sont de Feu ; le critique pèse plus (Enflammer prolonge les coups critiques).
-    id: 'feu', nom: 'Feu', libelle: 'feu (dégâts)', physique: false, armurerie: /feu/i,
+    id: 'feu', icone: 'spell_fire_firebolt02', nom: 'Feu', libelle: 'feu (dégâts)', physique: false, armurerie: /feu/i,
     poids: {
       pds: 1, dsorts: 1, dfeu: 0.95, int: 0.4, esp: 0.1, mp5: 0.4, crit: 0.95, tou: 1, hate: 0.8,
       penet: 0.3, end: 0.05, dps: 0, dpsDistance: 0.6, armureBase: 0,
@@ -37,7 +37,7 @@ export const SPECS_MAGE: Specialisation[] = [
   },
   {
     // Éclair de givre, Cône de froid, Blizzard : dégâts de Givre ; un peu plus d'Endurance pour survivre en solo.
-    id: 'givre', nom: 'Givre', libelle: 'givre (dégâts)', physique: false, armurerie: /givre/i,
+    id: 'givre', icone: 'spell_frost_frostbolt02', nom: 'Givre', libelle: 'givre (dégâts)', physique: false, armurerie: /givre/i,
     poids: {
       pds: 1, dsorts: 1, dgivre: 0.95, int: 0.4, esp: 0.1, mp5: 0.4, crit: 0.75, tou: 1, hate: 0.85,
       penet: 0.3, end: 0.08, dps: 0, dpsDistance: 0.6, armureBase: 0,

@@ -9,7 +9,7 @@ const BILAN_SOINS: Specialisation['bilan'] = [
 export const SPECS_PRETRE: Specialisation[] = [
   {
     // Boucliers et soins ; vit de son mana : l'Intelligence pèse presque autant que les soins.
-    id: 'discipline', nom: 'Discipline', libelle: 'discipline (soins)', physique: false, armurerie: /discipline/i,
+    id: 'discipline', icone: 'spell_holy_wordfortitude', nom: 'Discipline', libelle: 'discipline (soins)', physique: false, armurerie: /discipline/i,
     poids: { soins: 1, pds: 1, int: 0.8, mp5: 1, esp: 0.45, crit: 0.4, hate: 0.6, end: 0.1, dps: 0, dpsDistance: 0.5, armureBase: 0 },
     reliques: /Mot de pouvoir : Bouclier|Infusion de puissance|Feu intérieur|Focalisation|Méditation|Esprit divin|Rénovation|Prière|Soins|guérison/i,
     filtre: ['soins', 'pds', 'int', 'mp5', 'esp', 'crit', 'hate'],
@@ -18,7 +18,7 @@ export const SPECS_PRETRE: Specialisation[] = [
   },
   {
     // Soins ; l'Esprit aide aussi les soins (Direction spirituelle).
-    id: 'sacre', nom: 'Sacré', libelle: 'sacré (soins)', physique: false, armurerie: /sacr/i,
+    id: 'sacre', icone: 'spell_holy_guardianspirit', nom: 'Sacré', libelle: 'sacré (soins)', physique: false, armurerie: /sacr/i,
     poids: { soins: 1, pds: 1, mp5: 1.1, int: 0.6, esp: 0.6, crit: 0.5, hate: 0.6, end: 0.05, dps: 0, dpsDistance: 0.5, armureBase: 0 },
     reliques: /Soins supérieurs|Soins rapides|Prière de soins|Rénovation|Esprit de rédemption|Direction spirituelle|Châtiment|Flammes sacrées|Soins|guérison/i,
     filtre: ['soins', 'pds', 'mp5', 'int', 'esp', 'crit', 'hate'],
@@ -27,7 +27,7 @@ export const SPECS_PRETRE: Specialisation[] = [
   },
   {
     // Tous les sorts d'attaque sont d'Ombre : seule cette école compte.
-    id: 'ombre', nom: 'Ombre', libelle: 'ombre (dégâts)', physique: false, armurerie: /ombre/i,
+    id: 'ombre', icone: 'spell_shadow_shadowwordpain', nom: 'Ombre', libelle: 'ombre (dégâts)', physique: false, armurerie: /ombre/i,
     poids: {
       pds: 1, dsorts: 1, dombre: 0.95, int: 0.4, esp: 0.35, crit: 0.4, tou: 1, hate: 0.85, mp5: 0.4, penet: 0.3, end: 0.08,
       dps: 0, dpsDistance: 0.6, armureBase: 0,

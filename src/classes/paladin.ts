@@ -4,7 +4,7 @@ import type { Specialisation } from './types.ts';
 export const SPECS_PALADIN: Specialisation[] = [
   {
     // Soins et puissance des sorts ; le critique rend du mana (Illumination), l'Intelligence pèse plus que l'Esprit.
-    id: 'sacre', nom: 'Sacré', libelle: 'sacré (soins)', physique: false, armurerie: /sacr/i,
+    id: 'sacre', icone: 'spell_holy_holybolt', nom: 'Sacré', libelle: 'sacré (soins)', physique: false, armurerie: /sacr/i,
     poids: { soins: 1, pds: 1, int: 0.8, mp5: 1, crit: 0.6, hate: 0.5, esp: 0.25, end: 0.05, dps: 0, armureBase: 0 },
     reliques: /Lumière sacrée|Éclair lumineux|Horion sacré|Imposition des mains|Illumination|Purification|Faveur divine|Bénédiction de lumière|soin|guérison/i,
     filtre: ['soins', 'pds', 'int', 'mp5', 'crit', 'hate'],
@@ -13,7 +13,7 @@ export const SPECS_PALADIN: Specialisation[] = [
   },
   {
     // Tank : Endurance, défense, évitement et blocage ; la menace vient de la magie du Sacré.
-    id: 'protection', nom: 'Protection', libelle: 'protection (tank)', physique: true, armurerie: /protection/i,
+    id: 'protection', icone: 'spell_holy_devotionaura', nom: 'Protection', libelle: 'protection (tank)', physique: true, armurerie: /protection/i,
     poids: {
       end: 1.5, def: 1.5, esq: 1.5, par: 1.2, sbloc: 1, blocage: 0.7, armure: 0.1, for: 0.5, agi: 0.7, tou: 0.8, exp: 0.8,
       pds: 0.4, dsacre: 0.35, int: 0.3, mp5: 0.3, crit: 0.2, rfeu: 0.1, rgivre: 0.1, rombre: 0.1, rnature: 0.1, rarcane: 0.1,
@@ -26,7 +26,7 @@ export const SPECS_PALADIN: Specialisation[] = [
   },
   {
     // Arme à deux mains lente : environ 14 PA par point de DPS ; les sceaux ajoutent des dégâts du Sacré.
-    id: 'vindicte', nom: 'Vindicte', libelle: 'vindicte (dégâts)', physique: true, armurerie: /vindicte/i,
+    id: 'vindicte', icone: 'spell_holy_auraoflight', nom: 'Vindicte', libelle: 'vindicte (dégâts)', physique: true, armurerie: /vindicte/i,
     poids: {
       for: 2, agi: 1, pa: 1, crit: 2, tou: 2.3, exp: 2, hate: 1.4, end: 0.4, int: 0.2, mp5: 0.15, pds: 0.3, dsacre: 0.3,
       pa_mv: 0.4, pa_hum: 0.4, pa_bete: 0.4, pa_dem: 0.3, dps: 14, armureBase: 0,

@@ -71,6 +71,7 @@ npm run build                       # vérifie les types puis construit dist/
 npm run donnees                     # régénère public/data/druide.json et public/icons
 CLASSE=paladin npm run donnees      # même chose pour une autre classe (une fois ses spécialisations décrites)
 npm run donnees:construire          # réassemble les données sans rien retélécharger
+npm run icones:specs                # télécharge les icônes des spés manquantes (public/icons/specs)
 ```
 
 ## Les classes
@@ -79,6 +80,7 @@ npm run donnees:construire          # réassemble les données sans rien retél�
 
 Les spécialisations sont dans `src/classes/<classe>.ts`. Pour chacune :
 
+- icône : celle de l'arbre de talents dans la table TalentTab de Forever (pour le druide félin, la forme de félin) ;
 - poids des stats, du DPS de l'arme de mêlée et de celui de l'arme à distance ;
 - expression des sorts de la spé (classement des reliques et tri des objets utiles) ;
 - `ambidextre` (spé à deux armes) et `armesMain` (type d'arme exigé en main droite, comme la dague du voleur Assassinat) ;

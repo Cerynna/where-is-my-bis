@@ -11,7 +11,7 @@ const BILAN_OMBRE: [Stat, string][] = [
 export const SPECS_DEMONISTE: Specialisation[] = [
   {
     // Sorts d'Ombre à effet sur la durée : le critique compte peu.
-    id: 'affliction', nom: 'Affliction', libelle: 'affliction (dégâts)', physique: false, armurerie: /affliction/i,
+    id: 'affliction', icone: 'spell_shadow_deathcoil', nom: 'Affliction', libelle: 'affliction (dégâts)', physique: false, armurerie: /affliction/i,
     poids: {
       pds: 1, dsorts: 1, dombre: 0.95, int: 0.35, end: 0.2, esp: 0.15, crit: 0.4, tou: 1, hate: 0.8, mp5: 0.3, penet: 0.3,
       dps: 0, dpsDistance: 0.6, armureBase: 0,
@@ -23,7 +23,7 @@ export const SPECS_DEMONISTE: Specialisation[] = [
   },
   {
     // Ombre aussi ; l'Endurance profite de l'Étreinte démoniaque, et le démon hérite d'une part de tes stats.
-    id: 'demonologie', nom: 'Démonologie', libelle: 'démonologie (dégâts)', physique: false, armurerie: /d[ée]monologie/i,
+    id: 'demonologie', icone: 'spell_shadow_metamorphosis', nom: 'Démonologie', libelle: 'démonologie (dégâts)', physique: false, armurerie: /d[ée]monologie/i,
     poids: {
       pds: 1, dsorts: 1, dombre: 0.9, int: 0.4, end: 0.3, esp: 0.1, crit: 0.6, tou: 1, hate: 0.8, mp5: 0.3, penet: 0.3,
       dps: 0, dpsDistance: 0.6, armureBase: 0,
@@ -35,7 +35,7 @@ export const SPECS_DEMONISTE: Specialisation[] = [
   },
   {
     // Trait de l'ombre (Ombre) et Immolation, Feu de l'âme, Conflagration (Feu) : les deux écoles sont celles de la spé.
-    id: 'destruction', nom: 'Destruction', libelle: 'destruction (dégâts)', physique: false, armurerie: /destruction/i,
+    id: 'destruction', icone: 'spell_shadow_rainoffire', nom: 'Destruction', libelle: 'destruction (dégâts)', physique: false, armurerie: /destruction/i,
     poids: {
       pds: 1, dsorts: 1, dombre: 0.7, dfeu: 0.6, int: 0.35, end: 0.2, esp: 0.1, crit: 0.95, tou: 1, hate: 0.8, mp5: 0.3, penet: 0.3,
       dps: 0, dpsDistance: 0.6, armureBase: 0,

@@ -1,5 +1,6 @@
 import { caseDistance } from '../classes/equipement.ts';
 import { CLASSES } from '../classes/index.ts';
+import { IconeSpe } from '../composants/IconeSpe.tsx';
 import { COURT, nombre } from '../libelles.ts';
 import type { Stat } from '../types.ts';
 
@@ -40,7 +41,7 @@ export function APropos() {
                   });
                 return (
                   <div key={s.id}>
-                    <dt>{s.nom}</dt>
+                    <dt><IconeSpe spe={s} taille={18} /> {s.nom}</dt>
                     <dd>{tops.join(' · ')}</dd>
                   </div>
                 );

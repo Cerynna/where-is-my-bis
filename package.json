@@ -12,7 +12,8 @@
     "preview": "vite preview --port 5190",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.scripts.json",
     "donnees": "node --experimental-strip-types --no-warnings scripts/donnees/tout.ts",
-    "donnees:construire": "node --experimental-strip-types --no-warnings scripts/donnees/construire.ts"
+    "donnees:construire": "node --experimental-strip-types --no-warnings scripts/donnees/construire.ts",
+    "icones:specs": "node --experimental-strip-types --no-warnings scripts/donnees/icones-specs.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
