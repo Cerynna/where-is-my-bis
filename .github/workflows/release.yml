@@ -61,4 +61,5 @@ jobs:
 
       - name: Jeton Firebase absent
         if: env.FIREBASE_TOKEN == ''
-        run: echo "::warning::Secret FIREBASE_TOKEN absent : release créée, mais site non déployé."
+        run: |
+          echo "::warning::Secret FIREBASE_TOKEN absent : release créée, mais site non déployé."
