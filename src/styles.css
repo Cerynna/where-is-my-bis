@@ -27,6 +27,7 @@
   --c-jcj: #e57373;
   --c-vendeur: #b0bec5;
   --c-monde: #8fb3d9;
+  --c-monstre: #e8a0bf;
   --c-inconnue: #c39bf0;
   --c-autre: #b9b9b9;
   --font-d: "Marcellus", "Palatino Linotype", Georgia, serif;
@@ -106,6 +107,7 @@ input[type="search"], select { width: 100%; background: var(--bg); border: 1px s
 .src-donjon { color: var(--c-donjon); } .src-raid { color: var(--c-raid); } .src-quete { color: var(--c-quete); }
 .src-metier { color: var(--c-metier); } .src-rep { color: var(--c-rep); } .src-jcj { color: var(--c-jcj); }
 .src-vendeur { color: var(--c-vendeur); } .src-monde { color: var(--c-monde); } .src-inconnue { color: var(--c-inconnue); }
+.src-monstre { color: var(--c-monstre); }
 .src-autre { color: var(--c-autre); }
 
 /* Icônes */

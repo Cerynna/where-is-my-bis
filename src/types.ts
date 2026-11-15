@@ -16,7 +16,7 @@ export type Stat =
   | 'rfeu' | 'rgivre' | 'rombre' | 'rnature' | 'rarcane';
 
 export type TypeSource =
-  | 'donjon' | 'raid' | 'quete' | 'metier' | 'rep' | 'jcj' | 'vendeur' | 'monde' | 'inconnue' | 'autre';
+  | 'donjon' | 'raid' | 'quete' | 'metier' | 'rep' | 'jcj' | 'vendeur' | 'monstre' | 'monde' | 'inconnue' | 'autre';
 
 export type Faction = 'Alliance' | 'Horde';
 

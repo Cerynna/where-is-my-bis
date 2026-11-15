@@ -23,9 +23,9 @@ export const ARMES: Record<number, string> = { 4: 'Masse', 5: 'Masse', 6: 'Arme 
 
 export const SOURCES: Record<TypeSource, string> = {
   donjon: 'Donjon', raid: 'Raid', quete: 'Quête', metier: 'Métier', rep: 'Réputation', jcj: 'JcJ',
-  vendeur: 'Marchand', monde: 'Butin du monde', inconnue: 'Source inconnue', autre: 'Autre',
+  vendeur: 'Marchand', monstre: 'Monstre', monde: 'Butin du monde', inconnue: 'Source inconnue', autre: 'Autre',
 };
-export const ORDRE_SOURCES: TypeSource[] = ['donjon', 'raid', 'quete', 'metier', 'rep', 'jcj', 'vendeur', 'monde', 'inconnue', 'autre'];
+export const ORDRE_SOURCES: TypeSource[] = ['donjon', 'raid', 'quete', 'metier', 'rep', 'jcj', 'vendeur', 'monstre', 'monde', 'inconnue', 'autre'];
 
 export const QUALITES: Record<number, string> = { 2: 'Inhabituel', 3: 'Rare', 4: 'Épique', 5: 'Légendaire' };
 

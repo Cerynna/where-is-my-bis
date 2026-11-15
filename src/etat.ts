@@ -72,9 +72,18 @@ function nettoyer(e: Partial<Etat>): Etat {
   };
 }
 
+/** Version des réglages gardés : la 2 ajoute la provenance « Monstre », cochée d'office une fois. */
+const VERSION = 2;
+
 export function lireEtat(): Etat {
   let local: Partial<Etat> = {};
-  try { local = JSON.parse(localStorage.getItem(CLE) ?? '{}') as Partial<Etat>; } catch { /* stockage indisponible */ }
+  try {
+    local = JSON.parse(localStorage.getItem(CLE) ?? '{}') as Partial<Etat>;
+    if (Number(localStorage.getItem(`${CLE}:version`) ?? 1) < VERSION && local.sources && !local.sources.includes('monstre')) {
+      local.sources = [...local.sources, 'monstre'];
+    }
+    localStorage.setItem(`${CLE}:version`, String(VERSION));
+  } catch { /* stockage indisponible */ }
   const p = new URLSearchParams(location.search);
   if (![...p.keys()].length) return nettoyer(local);
   const liste = (k: string) => (p.get(k) ? p.get(k)!.split(',').filter(Boolean) : undefined);

@@ -245,5 +245,5 @@ function libelleCourt(e: Emplacement): string {
 
 function labelSource(type: Objet['sources'][number]['type'] | undefined): string {
   const t = type ?? 'autre';
-  return { donjon: 'Donjon', raid: 'Raid', quete: 'Quête', metier: 'Métier', rep: 'Réputation', jcj: 'JcJ', vendeur: 'Marchand', monde: 'Monde', inconnue: 'Inconnue', autre: 'Autre' }[t];
+  return { donjon: 'Donjon', raid: 'Raid', quete: 'Quête', metier: 'Métier', rep: 'Réputation', jcj: 'JcJ', vendeur: 'Marchand', monstre: 'Monstre', monde: 'Monde', inconnue: 'Inconnue', autre: 'Autre' }[t];
 }

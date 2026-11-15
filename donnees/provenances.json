@@ -1,3 +1,11 @@
 {
-  "_lisez-moi": "Provenances ajoutées à la main (par exemple lues sur Wowhead) pour les objets que wowf.io n'a pas encore révélés. Clé = numéro de l'objet. type : donjon, raid, quete, metier, rep, jcj, vendeur, monde, autre. Ces lignes remplacent « Provenance pas encore révélée » à la prochaine génération (npm run donnees:construire)."
+  "_lisez-moi": "Provenances ajoutées à la main (par exemple lues sur Wowhead) pour les objets que wowf.io n'a pas encore révélés. Clé = numéro de l'objet. type : donjon, raid, quete, metier, rep, jcj, vendeur, monstre, monde, autre. Ces lignes remplacent « Provenance pas encore révélée » à la prochaine génération (npm run donnees:construire). Taux entre parenthèses : part des dépouilles relevées par Wowhead au 15/11/2026.",
+  "263006": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "L'Introuvable (19 %)" }],
+  "284165": [{ "type": "monstre", "lieu": "Teldrassil", "detail": "Traqueur du crépuscule (20 %)" }],
+  "285236": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "Slydris (21 %)" }],
+  "285238": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "Slydris (18 %)" }],
+  "285264": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "Claquerostre le Rapide (26 %)" }],
+  "285268": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "Claquerostre le Rapide (21 %)" }],
+  "285272": [{ "type": "monstre", "lieu": "Île de Zéphras", "detail": "Plume-Fougère (13 %)" }],
+  "287010": [{ "type": "monstre", "lieu": "Royaumes de l'Est", "detail": "Twilight Outrider (7 %)" }]
 }
