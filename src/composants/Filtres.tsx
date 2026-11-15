@@ -3,7 +3,7 @@ import { NOMS_MATIERES, type Matiere } from '../classes/equipement.ts';
 import { specDe } from '../classes/index.ts';
 import type { Etat, Vue } from '../etat.ts';
 import { defaut } from '../etat.ts';
-import { COURT, EMPLACEMENTS, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES } from '../libelles.ts';
+import { COURT, libelleEmplacement, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES } from '../libelles.ts';
 import type { Emplacement, Stat, TypeSource } from '../types.ts';
 
 interface Props {
@@ -25,7 +25,8 @@ function basculer<T>(liste: T[], v: T): T[] {
 export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, avecPerso }: Props) {
   const liste = vue === 'objets';
   const spe = specDe(classe, etat.role);
-  const libelleEmplacement = (e: Emplacement) => (e === 'relique' ? classe.relique?.nom ?? EMPLACEMENTS[e] : EMPLACEMENTS[e]);
+  // Les pièces du travail du cuir liées quand ramassées sont toutes en cuir : inutile pour une classe en tissu.
+  const porteCuir = classe.armures.some((a) => a.matiere === 'cuir');
   return (
     <div className="filtres">
       <fieldset className="bloc-niveau">
@@ -96,10 +97,12 @@ export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, 
             <option value={10}>10 %</option>
           </select>
         </label>
-        <label className="coche">
-          <input id="cb-maroquinier" type="checkbox" checked={etat.maroquinier} onChange={(e) => maj({ maroquinier: e.target.checked })} />
-          Je suis travailleur du cuir <small>(pièces liées quand ramassées)</small>
-        </label>
+        {porteCuir && (
+          <label className="coche">
+            <input id="cb-maroquinier" type="checkbox" checked={etat.maroquinier} onChange={(e) => maj({ maroquinier: e.target.checked })} />
+            Je suis travailleur du cuir <small>(pièces liées quand ramassées)</small>
+          </label>
+        )}
         <label className="coche">
           <input id="cb-hv" type="checkbox" checked={etat.hvSeulement} onChange={(e) => maj({ hvSeulement: e.target.checked })} />
           Seulement ce qui s’achète à l’hôtel des ventes
@@ -137,7 +140,7 @@ export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, 
             <label>Emplacement
               <select id="sel-emplacement" value={etat.emplacement} onChange={(e) => maj({ emplacement: e.target.value as Emplacement | 'tous' })}>
                 <option value="tous">Tous</option>
-                {ORDRE_EMPLACEMENTS.filter((e) => emplacements.includes(e)).map((e) => <option key={e} value={e}>{libelleEmplacement(e)}</option>)}
+                {ORDRE_EMPLACEMENTS.filter((e) => emplacements.includes(e)).map((e) => <option key={e} value={e}>{libelleEmplacement(e, classe)}</option>)}
               </select>
             </label>
             <label>Donjon, raid ou zone

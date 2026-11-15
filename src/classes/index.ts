@@ -2,9 +2,11 @@
 // en passant `actif: true` dans equipement.ts, puis en générant ses données (CLASSE=<id> npm run donnees).
 import { SPECS_DRUIDE } from './druide.ts';
 import { EQUIPEMENTS } from './equipement.ts';
+import { SPECS_MAGE } from './mage.ts';
 import type { Classe, Specialisation } from './types.ts';
 
 const SPECS: Partial<Record<string, Specialisation[]>> = {
+  mage: SPECS_MAGE,
   druide: SPECS_DRUIDE,
 };
 

@@ -1,3 +1,4 @@
+import { caseDistance } from '../classes/equipement.ts';
 import { CLASSES } from '../classes/index.ts';
 import { COURT, nombre } from '../libelles.ts';
 import type { Stat } from '../types.ts';
@@ -30,10 +31,13 @@ export function APropos() {
             <h3 style={{ color: c.couleur }}>{c.nom}</h3>
             <dl>
               {c.specs.map((s) => {
-                const tops = (Object.entries(s.poids) as [Stat | 'dps' | 'armureBase', number][])
+                const tops = (Object.entries(s.poids) as [Stat | 'dps' | 'dpsDistance' | 'armureBase', number][])
                   .filter(([k, v]) => v >= 0.5 && k !== 'armureBase')
                   .sort((a, b) => b[1] - a[1])
-                  .map(([k, v]) => `${k === 'dps' ? 'DPS d’arme' : COURT[k as Stat] ?? k} ${nombre(v, v % 1 ? 1 : 0)}`);
+                  .map(([k, v]) => {
+                    const nom = k === 'dps' ? 'DPS d’arme' : k === 'dpsDistance' ? `DPS ${caseDistance(c)?.nom === 'Baguette' ? 'de baguette' : 'à distance'}` : COURT[k as Stat] ?? k;
+                    return `${nom} ${nombre(v, v % 1 ? 1 : 0)}`;
+                  });
                 return (
                   <div key={s.id}>
                     <dt>{s.nom}</dt>

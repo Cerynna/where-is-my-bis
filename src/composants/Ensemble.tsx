@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Etat } from '../etat.ts';
-import { COURT, EMPLACEMENTS, nombre } from '../libelles.ts';
+import { caseDistance, type EquipementClasse } from '../classes/equipement.ts';
+import { COURT, libelleEmplacement, nombre } from '../libelles.ts';
 import type { Emplacement, Objet, Perso, Stat } from '../types.ts';
 import {
   comparer, meilleurEnsemble, passeCommun, sourcesVisibles, valeur, valeurPortee,
@@ -13,14 +14,15 @@ import { texteSource } from './sources.ts';
 
 const DROITE: [Case, string][] = [['mains', 'Mains'], ['taille', 'Taille'], ['jambes', 'Jambes'], ['pieds', 'Pieds'], ['doigt1', 'Doigt'], ['doigt2', 'Doigt'], ['bijou1', 'Bijou'], ['bijou2', 'Bijou']];
 
-/** Colonne de gauche de la fiche ; la relique n'y figure que si la classe en a une. */
-function gauche(nomRelique?: string): [Case, string][] {
+/** Colonne de gauche de la fiche ; la relique ou l'arme à distance n'y figure que si la classe en a une. */
+function gauche(classe: EquipementClasse): [Case, string][] {
   const c: [Case, string][] = [['tete', 'Tête'], ['cou', 'Cou'], ['epaules', 'Épaules'], ['dos', 'Dos'], ['torse', 'Torse'], ['poignets', 'Poignets']];
-  return nomRelique ? [...c, ['relique', nomRelique]] : c;
+  const d = caseDistance(classe);
+  return d ? [...c, [d.emplacement, d.nom]] : c;
 }
 
 /** Blocs « emplacement par emplacement ». */
-function details(nomRelique?: string): [Emplacement[], string, Case[]][] {
+function details(classe: EquipementClasse): [Emplacement[], string, Case[]][] {
   const d: [Emplacement[], string, Case[]][] = [
     [['tete'], 'Tête', ['tete']], [['cou'], 'Cou', ['cou']], [['epaules'], 'Épaules', ['epaules']], [['dos'], 'Dos', ['dos']],
     [['torse'], 'Torse', ['torse']], [['poignets'], 'Poignets', ['poignets']], [['mains'], 'Mains', ['mains']],
@@ -28,7 +30,8 @@ function details(nomRelique?: string): [Emplacement[], string, Case[]][] {
     [['doigt'], 'Doigts', ['doigt1', 'doigt2']], [['bijou'], 'Bijoux', ['bijou1', 'bijou2']],
     [['arme2m', 'arme1m'], 'Arme', ['arme']], [['maing', 'bouclier'], 'Main gauche', ['maing']],
   ];
-  return nomRelique ? [...d, [['relique'], nomRelique, ['relique']]] : d;
+  const dist = caseDistance(classe);
+  return dist ? [...d, [[dist.emplacement], dist.nom, [dist.emplacement]]] : d;
 }
 
 export function resume(o: Objet): string {
@@ -110,12 +113,13 @@ function totaux(objets: (Objet | null | undefined)[]) {
 }
 
 function Bilan({ ens, portes }: { ens: TEnsemble; portes: Objet[] }) {
-  const { spe } = useClasse();
+  const { classe, spe } = useClasse();
   const { t, armure } = totaux(Object.values(ens));
   const avant = portes.length ? totaux(portes) : null;
   const lignes = spe.bilan;
   const physique = spe.physique;
-  const armePortee = portes.find((o) => o.arme);
+  const armePortee = portes.find((o) => o.arme && o.emplacement !== 'distance');
+  const distancePortee = portes.find((o) => o.emplacement === 'distance');
   const vAvant = portes.reduce((s, o) => s + valeur(o, spe), 0);
   const vApres = Object.values(ens).reduce((s, o) => s + (o ? valeur(o, spe) : 0), 0);
   const pa = (t.for ?? 0) * 2 + (t.pa ?? 0) + (ens.arme?.arme ? Math.round(ens.arme.arme.dps * 14) : 0);
@@ -132,6 +136,10 @@ function Bilan({ ens, portes }: { ens: TEnsemble; portes: Objet[] }) {
         {lignes.filter(([k]) => t[k] || avant?.t[k]).map(([k, l]) => (<div key={k}><dt>{l}</dt>{cellule(avant?.t[k], t[k])}</div>))}
         <div><dt>Armure des pièces</dt>{cellule(avant ? avant.armure + (avant.t.armure ?? 0) : undefined, armure + (t.armure ?? 0))}</div>
         {physique && ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
+        {!!spe.poids.dpsDistance && ens.distance?.arme && (
+          <div><dt>DPS {caseDistance(classe)?.nom === 'Baguette' ? 'de la baguette' : 'à distance'}</dt>
+            {cellule(distancePortee?.arme?.dps, ens.distance.arme.dps, 1)}</div>
+        )}
       </dl>
       <p className="note">
         {avant && vAvant > 0 ? `Valeur estimée en ${spe.nom.toLowerCase()} : +${nombre(Math.max(0, (vApres - vAvant) / vAvant) * 100)} % en suivant l’ensemble conseillé. ` : ''}
@@ -160,7 +168,7 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
           Survole un objet pour voir son infobulle ; son nom ouvre sa fiche Wowhead.
         </p>
         <div className="fiche">
-          <div className="colonne">{gauche(classe.relique?.nom).map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} etat={etat} statut={statuts[c]} />)}</div>
+          <div className="colonne">{gauche(classe).map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} etat={etat} statut={statuts[c]} />)}</div>
           <div className="centre">
             <Bilan ens={ens} portes={portes} />
             <Carte libelle={ens.maing ? 'Arme à une main' : 'Arme'} objet={ens.arme} etat={etat} statut={statuts.arme} />
@@ -174,7 +182,7 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
         <h2 id="h-detail">Emplacement par emplacement</h2>
         <p className="sous-titre">Les meilleurs choix à ton niveau, puis la prochaine amélioration dans les dix niveaux qui viennent.</p>
         <div className="blocs">
-          {details(classe.relique?.nom).map(([emps, titre, cases]) => (
+          {details(classe).map(([emps, titre, cases]) => (
             <BlocEmplacement key={titre} titre={titre} emps={emps} objets={objets} etat={etat} choisis={choisis} portes={portes}
               actuel={Math.min(...cases.map((c) => (ens[c] ? valeur(ens[c]!, spe) : 0)))} />
           ))}
@@ -237,7 +245,7 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
         {porte && <span className="badge porte">Porté</span>}
         {!porte && choisi && <span className="badge">Choisi</span>}
         {mieux && !trop && <span className="badge mieux">▲ Mieux que le tien</span>}
-        {avecEmplacement && <span className="ligne-emp">{libelleCourt(o.emplacement, classe.relique?.nom)} · iLvl {o.ilvl}</span>}
+        {avecEmplacement && <span className="ligne-emp">{libelleCourt(o.emplacement, classe)} · iLvl {o.ilvl}</span>}
         <span className="ligne-niv">niv. {o.niveau}{trop ? ' requis' : ''}</span>
         <span className={`pastille src-${premiere?.type ?? 'autre'}`}>
           {o.maroquinier ? 'Maroquinier' : porte && premiere?.type === 'autre' ? 'Porté' : labelSource(premiere?.type)}
@@ -247,11 +255,10 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
   );
 }
 
-function libelleCourt(e: Emplacement, nomRelique?: string): string {
+function libelleCourt(e: Emplacement, classe: EquipementClasse): string {
   if (e === 'arme2m') return 'Deux mains';
   if (e === 'arme1m') return 'Une main';
-  if (e === 'relique') return nomRelique ?? EMPLACEMENTS[e];
-  return EMPLACEMENTS[e];
+  return libelleEmplacement(e, classe);
 }
 
 function labelSource(type: Objet['sources'][number]['type'] | undefined): string {

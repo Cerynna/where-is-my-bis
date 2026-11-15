@@ -5,7 +5,9 @@ import type { Matiere } from './classes/equipement.ts';
 export type Emplacement =
   | 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets'
   | 'mains' | 'taille' | 'jambes' | 'pieds' | 'doigt' | 'bijou'
-  | 'arme2m' | 'arme1m' | 'maing' | 'bouclier' | 'relique';
+  | 'arme2m' | 'arme1m' | 'maing' | 'bouclier' | 'relique'
+  /** Arme à distance : baguette, arc, fusil, arbalète, arme de jet. */
+  | 'distance';
 
 export type Stat =
   | 'agi' | 'for' | 'end' | 'int' | 'esp'

@@ -9,10 +9,13 @@ import { lireCompendium, sourcesQuetes } from './compendium.ts';
 import { lireDonjons, niveauxDonjons, nomDonjon } from './donjons.ts';
 import { lireFiche } from './wowf.ts';
 import { classeParId, type Classe } from '../../src/classes/index.ts';
+import { POIDS_HORS_STATS } from '../../src/classes/types.ts';
 
-// Mots qui rendent un effet « Équipé : » utile à toutes les classes. Les sorts propres à une classe
-// (Colère, Toucher guérisseur…) viennent des expressions de reliques de ses spécialisations.
-const EFFET_COMMUN = /attaque|agilité|force|armure|esquive|critique|toucher|dégâts physiques|vitesse d'attaque|vitesse de déplacement|forme|sorts|soins|mana/i;
+// Mots qui rendent un effet « Équipé : » utile : communs, pour les spés physiques, pour les spés de sorts.
+// Les sorts propres à une classe (Colère, Boule de feu…) viennent des expressions `reliques` de ses spécialisations.
+const EFFET_COMMUN = /critique|toucher|vitesse de déplacement|forme/i;
+const EFFET_PHYSIQUE = /attaque|agilité|force|armure|esquive|dégâts physiques|vitesse d'attaque/i;
+const EFFET_SORTS = /sorts|soins|mana/i;
 
 export interface Bilan { gardes: number; ecartes: Record<string, number> }
 
@@ -25,9 +28,14 @@ function critereUtile(classe: Classe): (c: Candidat) => boolean {
   if (!classe.specs.length) throw new Error(`${classe.nom} : décris ses spécialisations dans src/classes/ avant de générer ses données.`);
   const stats = new Set<Stat>();
   for (const s of classe.specs) {
-    for (const [k, v] of Object.entries(s.poids)) if (k !== 'dps' && k !== 'armureBase' && (v ?? 0) > 0.1) stats.add(k as Stat);
+    for (const [k, v] of Object.entries(s.poids)) if (!POIDS_HORS_STATS.includes(k) && (v ?? 0) > 0.1) stats.add(k as Stat);
   }
-  const effets = [EFFET_COMMUN, ...classe.specs.flatMap((s) => (s.reliques ? [s.reliques] : []))];
+  const effets = [
+    EFFET_COMMUN,
+    ...(classe.specs.some((s) => s.physique) ? [EFFET_PHYSIQUE] : []),
+    ...(classe.specs.some((s) => !s.physique) ? [EFFET_SORTS] : []),
+    ...classe.specs.flatMap((s) => (s.reliques ? [s.reliques] : [])),
+  ];
   return (c) => {
     // Reliques : toutes celles dont l'effet est lisible (les runes de Saison de la découverte n'existent pas sur Forever).
     if (c.emplacement === 'relique') return c.effets.some((e) => !e.texte.includes('$') && !/^Grave sur/.test(e.texte));

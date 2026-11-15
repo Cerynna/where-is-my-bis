@@ -2,7 +2,12 @@
 
 Site statique (React + TypeScript + Vite, aucun serveur) qui donne le meilleur équipement de chaque classe, du niveau 1 au niveau 60, sur WoW Forever.
 
-Le site est prévu pour les neuf classes. Pour l'instant, seul le **druide** est fait, avec ses quatre spécialisations : félin, ours, équilibre et restauration. Les autres classes ont leur carte sur l'accueil et une page « Bientôt ».
+Le site est prévu pour les neuf classes. Pour l'instant, deux sont faites :
+
+- le **druide**, avec ses quatre spécialisations : félin, ours, équilibre et restauration ;
+- le **mage**, avec ses trois spécialisations : arcanes, feu et givre.
+
+Les autres classes ont leur carte sur l'accueil et une page « Bientôt ».
 
 ## Pages
 
@@ -21,7 +26,7 @@ Pour une classe, les objets proposés sont :
 - l'armure des matières qu'elle porte (`armures` dans `src/classes/equipement.ts`) ;
 - ses armes, les objets tenus en main gauche et le bouclier si elle en porte ;
 - colliers, bagues, bijoux, capes ;
-- sa relique : idole, libram ou totem.
+- sa relique (idole, libram, totem) ou, à défaut, son arme à distance (baguette, arc, fusil, arbalète, arme de jet).
 
 Les deux vues d'une classe :
 
@@ -60,11 +65,11 @@ npm run donnees:construire          # réassemble les données sans rien retél�
 
 ## Ajouter une classe
 
-Toutes les classes sont déjà décrites dans `src/classes/equipement.ts` : matières d'armure (mailles et plaques au niveau 40), armes, bouclier, relique, couleur et icône. Ces valeurs viennent du jeu classique et sont à vérifier sur Forever. Le druide, lui, est vérifié : il manie aussi les armes d'hast.
+Toutes les classes sont déjà décrites dans `src/classes/equipement.ts` : matières d'armure (mailles et plaques au niveau 40), armes, bouclier, relique, couleur et icône. Les armes ont été vérifiées pour les neuf classes dans la table SkillRaceClassInfo de Forever (le druide manie aussi les armes d'hast, le voleur les haches à une main). Les matières et les reliques viennent du jeu classique.
 
 Pour en activer une :
 
-1. Créer `src/classes/<classe>.ts` avec ses spécialisations, sur le modèle de `druide.ts`. Pour chacune : poids des stats, poids du DPS d'arme, expression des reliques utiles, stats du filtre « doit avoir », lignes du bilan, et l'expression qui reconnaît la spé dans l'armurerie.
+1. Créer `src/classes/<classe>.ts` avec ses spécialisations, sur le modèle de `druide.ts` ou `mage.ts`. Pour chacune : poids des stats, poids du DPS de l'arme de mêlée et de l'arme à distance, expression des sorts de la spé (pour les reliques et le tri des objets), stats du filtre « doit avoir », lignes du bilan, et l'expression qui reconnaît la spé dans l'armurerie.
 2. L'enregistrer dans `SPECS` (`src/classes/index.ts`).
 3. Passer `actif: true` dans `src/classes/equipement.ts`.
 4. Lancer `CLASSE=<classe> npm run donnees`. Les tables du jeu et les fiches wowf.io déjà téléchargées sont réutilisées. Seules les fiches des objets propres à la classe sont à récupérer.
@@ -112,7 +117,11 @@ Après une mise à jour du jeu, relancer `npm run donnees` (les fiches déjà t�
 
 ## Valeur d'un objet
 
-`src/valeur.ts` additionne les stats de l'objet pondérées par la spécialisation, plus le DPS de l'arme. Les poids de chaque spé sont dans `src/classes/<classe>.ts`. Pour le druide :
+`src/valeur.ts` additionne les stats de l'objet pondérées par la spécialisation, plus le DPS de l'arme (mêlée et distance ont chacune leur poids). Les poids de chaque spé sont dans `src/classes/<classe>.ts`.
+
+Pour le mage, tout passe par les sorts : puissance des sorts et dégâts des sorts d'abord, puis les dégâts de l'école de la spé (Arcanes, Feu ou Givre), le toucher, le critique et la hâte. Les Arcanes donnent plus de poids à l'Intelligence, à l'Esprit et au mana toutes les 5 s ; le Feu au critique. La baguette compte aussi par son DPS (0,6 par point), car on s'en sert beaucoup en montant de niveau.
+
+Pour le druide :
 
 - **Félin :**
   - 1 Force ≈ 1 Agilité ≈ 2 PA ;

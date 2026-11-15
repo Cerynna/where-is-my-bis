@@ -1,4 +1,5 @@
 // Valeur d'un objet pour une spécialisation, et filtres communs aux deux vues.
+import { STATS_ARMURERIE } from './armurerie.ts';
 import type { Specialisation } from './classes/types.ts';
 import type { Etat } from './etat.ts';
 import type { Emplacement, Objet, Perso, Stat } from './types.ts';
@@ -11,7 +12,8 @@ export function valeur(o: Objet, spe: Specialisation): number {
   const p = spe.poids;
   let v = 0;
   for (const [k, n] of Object.entries(o.stats) as [Stat, number][]) v += (p[k] ?? 0) * n;
-  if (o.arme) v += p.dps * o.arme.dps;
+  // DPS de l'arme : celui de mêlée et celui de l'arme à distance (baguette…) ne pèsent pas pareil.
+  if (o.arme) v += (o.emplacement === 'distance' ? p.dpsDistance ?? 0 : p.dps) * o.arme.dps;
   v += p.armureBase * o.armure;
   return v;
 }
@@ -58,7 +60,7 @@ export function normaliser(t: string): string {
 }
 
 export type Case = 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets' | 'mains' | 'taille' | 'jambes' | 'pieds'
-  | 'doigt1' | 'doigt2' | 'bijou1' | 'bijou2' | 'arme' | 'maing' | 'relique';
+  | 'doigt1' | 'doigt2' | 'bijou1' | 'bijou2' | 'arme' | 'maing' | 'relique' | 'distance';
 
 export type Ensemble = Record<Case, Objet | null>;
 
@@ -67,8 +69,11 @@ export function objetsPortes(perso: Perso | null, parId: Map<number, Objet>): Ob
   if (!perso) return [];
   return Object.values(perso.equipement).map((p) => {
     const b = parId.get(p.id);
+    if (!b) return p;
     // Les stats de l'armurerie font foi (suffixes aléatoires « du sanglier »…), la base donne la provenance.
-    return b ? { ...b, nom: p.nom, stats: p.stats, armure: p.armure, arme: p.arme ?? b.arme } : p;
+    // Celles que l'armurerie ne sait pas donner (dégâts par école, soins…) viennent de la base.
+    const manquantes = Object.fromEntries(Object.entries(b.stats).filter(([k]) => !STATS_ARMURERIE.has(k as Stat)));
+    return { ...b, nom: p.nom, stats: { ...manquantes, ...p.stats }, armure: p.armure, arme: p.arme ?? b.arme };
   });
 }
 
@@ -102,6 +107,7 @@ export function meilleurEnsemble(objets: Objet[], e: Etat, spe: Specialisation, 
     doigt1: bagues[0] ?? null, doigt2: bagues[1] ?? null, bijou1: bijoux[0] ?? null, bijou2: bijoux[1] ?? null,
     arme: paire ? uneMain : deuxMains ?? uneMain, maing: paire ? mainGauche : null,
     relique: par(['relique']).filter((o) => v(o) > 0)[0] ?? null,
+    distance: par(['distance']).filter((o) => v(o) > 0)[0] ?? null,
   };
 }
 
@@ -131,7 +137,7 @@ export function comparer(ens: Ensemble, perso: Perso | null, portes: Objet[], sp
     // Gain infini : la pièce remplacée n'a aucune stat utile (sacoche, bijou de métier…).
     return { type: 'mieux', remplace: ancien, gain: va > 0 ? (v - va) / va : Number.POSITIVE_INFINITY };
   };
-  for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'maing', 'relique'] as Case[]) {
+  for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'maing', 'relique', 'distance'] as Case[]) {
     res[c] = statut(ens[c], parCase.get(c) ?? null);
   }
   for (const [a, b] of [['doigt1', 'doigt2'], ['bijou1', 'bijou2']] as [Case, Case][]) {

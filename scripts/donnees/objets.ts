@@ -1,7 +1,7 @@
 // Extrait des tables du jeu (publiées + cache des objets révélés) tous les objets qu'une classe
 // peut porter, du niveau 1 au niveau 60, avec stats, armure, dégâts, effets et icône.
 import path from 'node:path';
-import { SOUS_CLASSE_ARMURE, type EquipementClasse, type Matiere } from '../../src/classes/equipement.ts';
+import { ARMES_DISTANCE, SOUS_CLASSE_ARMURE, type EquipementClasse, type Matiere } from '../../src/classes/equipement.ts';
 import type { Arme, Effet, Emplacement, Stat } from '../../src/types.ts';
 import { indexer, lireCsv, type Ligne } from './commun.ts';
 import type { Hotfix, Rangee } from './cache-jeu.ts';
@@ -46,6 +46,8 @@ const STATS: Record<number, Stat> = {
 // Colonne du budget de stats (RandPropPoints) selon l'emplacement.
 const INDEX_BUDGET: Record<number, number> = {
   1: 0, 5: 0, 20: 0, 7: 0, 17: 0, 3: 1, 10: 1, 6: 1, 8: 1, 12: 1, 9: 2, 2: 2, 11: 2, 16: 2, 23: 2, 14: 2, 13: 3, 21: 3, 22: 3, 28: 4,
+  // Armes à distance (arc, arme de jet, baguette/fusil/arbalète) : même colonne que les reliques.
+  15: 4, 25: 4, 26: 4,
 };
 const EMPLACEMENT_ARMURE: Record<number, Emplacement> = {
   1: 'tete', 3: 'epaules', 5: 'torse', 20: 'torse', 6: 'taille', 7: 'jambes', 8: 'pieds', 9: 'poignets', 10: 'mains',
@@ -54,13 +56,18 @@ const MATIERE_PAR_SOUS = Object.fromEntries(Object.entries(SOUS_CLASSE_ARMURE).m
 
 /**
  * Emplacement (et matière pour l'armure) d'un objet que la classe peut porter, sinon null.
- * Les armes à distance (arcs, fusils, baguettes, armes de jet) attendent leur emplacement à elles.
  */
 function emplacement(eq: EquipementClasse, classe: number, sous: number, inv: number): { emp: Emplacement; matiere?: Matiere } | null {
   const armure = EMPLACEMENT_ARMURE[inv];
   const matiere = MATIERE_PAR_SOUS[sous];
   if (classe === 4 && armure && matiere && eq.armures.some((a) => a.matiere === matiere)) return { emp: armure, matiere };
-  if (classe === 2 && eq.armes.includes(sous)) return inv === 17 ? { emp: 'arme2m' } : [13, 21].includes(inv) ? { emp: 'arme1m' } : null;
+  if (classe === 2 && eq.armes.includes(sous)) {
+    if (inv === 17) return { emp: 'arme2m' };
+    if (inv === 13 || inv === 21) return { emp: 'arme1m' };
+    // 15 à distance (arc), 25 arme de jet, 26 à distance main droite (baguette, fusil, arbalète)
+    if (ARMES_DISTANCE.includes(sous) && [15, 25, 26].includes(inv)) return { emp: 'distance' };
+    return null;
+  }
   if (classe === 4 && sous === 0 && inv === 2) return { emp: 'cou' };
   if (classe === 4 && sous === 0 && inv === 11) return { emp: 'doigt' };
   if (classe === 4 && sous === 0 && inv === 12) return { emp: 'bijou' };
@@ -95,6 +102,10 @@ export function extraireObjets(build: string, hotfix: Hotfix, eq: EquipementClas
   const budget = indexer(lire('RandPropPoints'));
   const degats1 = indexer(lire('ItemDamageOneHand'));
   const degats2 = indexer(lire('ItemDamageTwoHand'));
+  // Armes à distance : une table par famille (baguettes, armes de jet, arcs/fusils/arbalètes).
+  const degatsBaguette = indexer(lire('ItemDamageWand'));
+  const degatsJet = indexer(lire('ItemDamageThrown'));
+  const degatsDistance = indexer(lire('ItemDamageRanged'));
   const armTotal = indexer(lire('ItemArmorTotal'), 'ItemLevel');
   const armLieu = indexer(lire('ArmorLocation'));
   const armQualite = indexer(lire('ItemArmorQuality'));
@@ -206,15 +217,18 @@ export function extraireObjets(build: string, hotfix: Hotfix, eq: EquipementClas
 
     let arme: Arme | undefined;
     const lanceur = (nombre(s.Flags_4) & 0x100) !== 0;
-    if (emp === 'arme2m' || emp === 'arme1m') {
-      const table = emp === 'arme2m' ? degats2 : degats1;
-      // Arme de lanceur : la formule surestime les dégâts, on applique le rapport mesuré.
-      const dps = nombre(table.get(String(ilvl))?.[`Quality_${q}`]) * (lanceur ? FACTEUR_LANCEUR[emp] : 1);
+    if (emp === 'arme2m' || emp === 'arme1m' || emp === 'distance') {
+      const sousArme = nombre(it.SubclassID);
+      const table = emp === 'arme2m' ? degats2 : emp === 'arme1m' ? degats1
+        : sousArme === 19 ? degatsBaguette : sousArme === 16 ? degatsJet : degatsDistance;
+      // Arme de lanceur (mêlée) : la formule surestime les dégâts, on applique le rapport mesuré.
+      const facteur = lanceur && emp !== 'distance' ? FACTEUR_LANCEUR[emp] : 1;
+      const dps = nombre(table.get(String(ilvl))?.[`Quality_${q}`]) * facteur;
       const vitesse = nombre(s.ItemDelay) / 1000;
       const ecart = nombre(s.DmgVariance);
       const min = Math.floor(dps * vitesse * (1 - ecart / 2));
       const max = Math.floor(dps * vitesse * (1 + ecart / 2) + 0.5);
-      arme = { min, max, vitesse, dps: Math.round(((min + max) / 2 / vitesse) * 10) / 10, sous: nombre(it.SubclassID), estime: lanceur || undefined };
+      arme = { min, max, vitesse, dps: Math.round(((min + max) / 2 / vitesse) * 10) / 10, sous: sousArme, estime: facteur !== 1 || undefined };
     }
 
     const effets: Effet[] = [];

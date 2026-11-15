@@ -1,6 +1,7 @@
 // Ce que chaque classe peut équiper. Partagé entre le site et les scripts de données.
-// Valeurs du jeu classique : à vérifier sur Forever (SkillRaceClassInfo) avant d'activer une classe.
-// Le druide a été vérifié : il manie aussi les armes d'hast sur Forever.
+// Armes vérifiées le 15/11 dans la table SkillRaceClassInfo de Forever (build 1.60.1.70938) pour les 9 classes :
+// le druide manie aussi les armes d'hast, le voleur les haches à une main.
+// Matières d'armure et reliques : valeurs du jeu classique.
 
 export type ClasseId = 'guerrier' | 'paladin' | 'chasseur' | 'voleur' | 'pretre' | 'chaman' | 'mage' | 'demoniste' | 'druide';
 export type Matiere = 'tissu' | 'cuir' | 'mailles' | 'plaques';
@@ -31,6 +32,20 @@ export interface EquipementClasse {
   relique?: { sous: number; nom: string };
 }
 
+/** Sous-classes d'armes à distance : arc (2), arme à feu (3), arme de jet (16), arbalète (18), baguette (19). */
+export const ARMES_DISTANCE = [2, 3, 16, 18, 19];
+
+/**
+ * Dernière case de la fiche : la relique pour les classes qui en ont une (druide, paladin, chaman),
+ * sinon l'arme à distance (« Baguette » quand la classe n'a que des baguettes).
+ */
+export function caseDistance(eq: EquipementClasse): { emplacement: 'relique' | 'distance'; nom: string } | null {
+  if (eq.relique) return { emplacement: 'relique', nom: eq.relique.nom };
+  const distance = eq.armes.filter((s) => ARMES_DISTANCE.includes(s));
+  if (!distance.length) return null;
+  return { emplacement: 'distance', nom: distance.every((s) => s === 19) ? 'Baguette' : 'À distance' };
+}
+
 export const EQUIPEMENTS: EquipementClasse[] = [
   {
     id: 'guerrier', nom: 'Guerrier', idJeu: 1, enumArmurerie: 'WARRIOR', couleur: '#C69B6D', icone: 'classicon_warrior', actif: false,
@@ -50,7 +65,7 @@ export const EQUIPEMENTS: EquipementClasse[] = [
   {
     id: 'voleur', nom: 'Voleur', idJeu: 4, enumArmurerie: 'ROGUE', couleur: '#FFF468', icone: 'classicon_rogue', actif: false,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }],
-    armes: [2, 3, 4, 7, 13, 15, 16, 18], bouclier: false,
+    armes: [0, 2, 3, 4, 7, 13, 15, 16, 18], bouclier: false,
   },
   {
     id: 'pretre', nom: 'Prêtre', idJeu: 5, enumArmurerie: 'PRIEST', couleur: '#FFFFFF', icone: 'classicon_priest', actif: false,
@@ -63,7 +78,7 @@ export const EQUIPEMENTS: EquipementClasse[] = [
     armes: [0, 1, 4, 5, 10, 13, 15], bouclier: true, relique: { sous: 9, nom: 'Totem' },
   },
   {
-    id: 'mage', nom: 'Mage', idJeu: 8, enumArmurerie: 'MAGE', couleur: '#3FC7EB', icone: 'classicon_mage', actif: false,
+    id: 'mage', nom: 'Mage', idJeu: 8, enumArmurerie: 'MAGE', couleur: '#3FC7EB', icone: 'classicon_mage', actif: true,
     armures: [{ matiere: 'tissu' }],
     armes: [7, 10, 15, 19], bouclier: false,
   },

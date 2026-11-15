@@ -1,6 +1,7 @@
 // Import d'un personnage depuis l'armurerie de Blizzard (WoW Forever).
 // La page n'autorise pas les requêtes d'un autre site (CORS) : elle passe par le relais /armurerie
 // (proxy du serveur Vite en développement). On y lit l'objet JSON `characterProfileInitialState`.
+import { cheminPublic } from './chemins.ts';
 import type { Emplacement, Objet, Perso, Stat } from './types.ts';
 
 const HOTE = 'https://worldofwarcraft.blizzard.com';
@@ -71,13 +72,21 @@ const STATS: Record<string, Stat> = {
   BONUS_STAT_ATTACK_POWER_VS_BEAST: 'pa_bete', BONUS_STAT_ATTACK_POWER_VS_UNDEAD: 'pa_mv',
   BONUS_STAT_ATTACK_POWER_VS_HUMANOID: 'pa_hum', BONUS_STAT_ATTACK_POWER_VS_DEMON: 'pa_dem',
   FIRE_RESISTANCE: 'rfeu', FROST_RESISTANCE: 'rgivre', SHADOW_RESISTANCE: 'rombre', NATURE_RESISTANCE: 'rnature', ARCANE_RESISTANCE: 'rarcane',
+  // Noms supposés (pas encore vus sur une page d'armurerie) : sans effet s'ils n'existent pas.
+  MANA_REGENERATION: 'mp5', HEALTH_REGENERATION: 'vie5', SPELL_PENETRATION: 'penet',
 };
+/**
+ * Stats que l'armurerie sait donner. Pour les autres (dégâts par école, soins, dégâts des sorts…),
+ * la version de la base complète la pièce portée (voir `objetsPortes`).
+ */
+export const STATS_ARMURERIE: ReadonlySet<Stat> = new Set(Object.values(STATS));
 const QUALITES: Record<string, Objet['q']> = { POOR: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, EPIC: 4, LEGENDARY: 5 };
 const INVENTAIRE: Record<string, number> = {
   HEAD: 1, NECK: 2, SHOULDER: 3, CHEST: 5, ROBE: 20, WAIST: 6, LEGS: 7, FEET: 8, WRIST: 9, HAND: 10, FINGER: 11,
   TRINKET: 12, CLOAK: 16, WEAPON: 13, WEAPONMAINHAND: 21, TWOHWEAPON: 17, RELIC: 28,
+  RANGED: 15, THROWN: 25, RANGEDRIGHT: 26, HOLDABLE: 23, SHIELD: 14,
 };
-/** Emplacement de l'armurerie → case de notre fiche. */
+/** Emplacement de l'armurerie → case de notre fiche. La case « ranged » est la relique ou l'arme à distance. */
 const CASES: Record<string, [string, Emplacement]> = {
   head: ['tete', 'tete'], neck: ['cou', 'cou'], shoulder: ['epaules', 'epaules'], back: ['dos', 'dos'],
   chest: ['torse', 'torse'], wrist: ['poignets', 'poignets'], hand: ['mains', 'mains'], waist: ['taille', 'taille'],
@@ -124,7 +133,8 @@ function versObjet(a: ObjetArmurerie, emplacement: Emplacement): Objet {
 export async function importerPerso(lien: string): Promise<Perso> {
   const chemin = cheminArmurerie(lien);
   if (!chemin) throw new Error('Ce lien n’est pas une page de personnage de l’armurerie WoW Forever.');
-  const r = await fetch(`./armurerie${chemin}`, { cache: 'no-cache' });
+  // Adresse absolue : relative, elle partirait de la page courante (/druide/objets → /druide/armurerie…).
+  const r = await fetch(cheminPublic(`armurerie${chemin}`), { cache: 'no-cache' });
   if (r.status === 404) throw new Error('Personnage introuvable : vérifie le nom dans le lien.');
   if (!r.ok) throw new Error(`L’armurerie ne répond pas (HTTP ${r.status}).`);
   const html = await r.text();
@@ -136,7 +146,10 @@ export async function importerPerso(lien: string): Promise<Perso> {
   const equipement: Record<string, Objet> = {};
   for (const [cle, a] of Object.entries(c.gear ?? {})) {
     const k = CASES[cle];
-    if (k && a?.id) equipement[k[0]] = versObjet(a, k[1]);
+    if (!k || !a?.id) continue;
+    // Case « ranged » : une arme (baguette, arc…) va dans l'arme à distance, le reste est une relique.
+    const [caseFiche, emplacement] = cle === 'ranged' && a.weapon?.damage ? ['distance', 'distance' as const] : k;
+    equipement[caseFiche] = versObjet(a, emplacement);
   }
   const metiers = (c.professions?.primaries ?? []).map((p) => p.name ?? '');
   const faction = c.faction?.enum === 'HORDE' ? 'Horde' : c.faction?.enum === 'ALLIANCE' ? 'Alliance' : undefined;
