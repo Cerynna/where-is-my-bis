@@ -48,9 +48,10 @@ export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, 
           <legend>Spécialisation</legend>
           <div className={`seg${classe.specs.length > 2 ? ' seg-specs' : ''}`}>
             {classe.specs.map((s) => (
-              <button key={s.id} type="button" aria-pressed={etat.role === s.id} onClick={() => maj({ role: s.id, stats: [] })}>
-                <IconeSpe spe={s} taille={26} />
-                <span>{s.nom}</span>
+              // Icône seule ; le nom au survol (title) et pour les lecteurs d'écran (aria-label).
+              <button key={s.id} type="button" aria-pressed={etat.role === s.id} onClick={() => maj({ role: s.id, stats: [] })}
+                title={s.nom} aria-label={s.nom}>
+                <IconeSpe spe={s} taille={34} />
               </button>
             ))}
           </div>
