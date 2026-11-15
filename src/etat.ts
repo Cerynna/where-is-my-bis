@@ -42,8 +42,9 @@ export function defaut(classe: Classe): Etat {
     faction: 'toutes',
     maroquinier: false,
     matieres: classe.armures.map((a) => a.matiere),
-    // « Source inconnue » décochée : ces objets n'ont pas de provenance révélée, on ne sait pas où les trouver.
-    sources: ORDRE_SOURCES.filter((s) => s !== 'autre' && s !== 'inconnue'),
+    // Décochées : « Source inconnue » (provenance pas révélée, on ne sait pas où les trouver)
+    // et « Butin du monde » (objets aléatoires, impossibles à aller chercher).
+    sources: ORDRE_SOURCES.filter((s) => s !== 'autre' && s !== 'inconnue' && s !== 'monde'),
     qualites: [2, 3, 4, 5],
     hvSeulement: false,
     emplacement: 'tous',
@@ -62,9 +63,9 @@ const PREFIXE = 'forever-equipement';
 const cle = (classe: Classe) => `${PREFIXE}:etat:${classe.id}`;
 /**
  * Version des réglages gardés : la 2 ajoute la provenance « Monstre », cochée d'office une fois ;
- * la 3 décoche une fois « Source inconnue » (décochée par défaut depuis).
+ * la 3 décoche une fois « Source inconnue », la 4 « Butin du monde » (décochées par défaut depuis).
  */
-const VERSION = 3;
+const VERSION = 4;
 
 function borner(n: number, min: number, max: number): number {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : min;
@@ -119,6 +120,7 @@ export function lireEtat(classe: Classe, p: URLSearchParams): Etat {
     if (local.sources) {
       if (version < 2 && !local.sources.includes('monstre')) local.sources = [...local.sources, 'monstre'];
       if (version < 3) local.sources = local.sources.filter((s) => s !== 'inconnue');
+      if (version < 4) local.sources = local.sources.filter((s) => s !== 'monde');
     }
     localStorage.setItem(`${cle(classe)}:version`, String(VERSION));
   } catch { /* stockage indisponible */ }
