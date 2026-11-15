@@ -41,6 +41,9 @@ const STATS: Record<number, Stat> = {
   51: 'rfeu', 52: 'rgivre', 54: 'rombre', 55: 'rnature', 56: 'rarcane', 128: 'pa_mv', 125: 'pa_hum', 131: 'pa_bete', 127: 'pa_dem',
   // Stats propres à Forever, identifiées sur wowf.io : dégâts par école de magie, pénétration des sorts
   47: 'penet', 83: 'dphys', 84: 'dsacre', 85: 'dfeu', 86: 'dnature', 87: 'dgivre', 88: 'dombre', 89: 'darcane',
+  // Numérotation du jeu : 15 score de blocage, 39 puissance d'attaque à distance.
+  // 90 à 96 sont des compétences d'arme (haches, masses, épées, dagues…) : ignorées.
+  15: 'sbloc', 39: 'pad',
 };
 
 // Colonne du budget de stats (RandPropPoints) selon l'emplacement.
@@ -64,6 +67,8 @@ function emplacement(eq: EquipementClasse, classe: number, sous: number, inv: nu
   if (classe === 2 && eq.armes.includes(sous)) {
     if (inv === 17) return { emp: 'arme2m' };
     if (inv === 13 || inv === 21) return { emp: 'arme1m' };
+    // Arme de main gauche : seulement pour les classes qui ont l'ambidextrie.
+    if (inv === 22) return eq.ambidextre ? { emp: 'armemg' } : null;
     // 15 à distance (arc), 25 arme de jet, 26 à distance main droite (baguette, fusil, arbalète)
     if (ARMES_DISTANCE.includes(sous) && [15, 25, 26].includes(inv)) return { emp: 'distance' };
     return null;
@@ -109,6 +114,7 @@ export function extraireObjets(build: string, hotfix: Hotfix, eq: EquipementClas
   const armTotal = indexer(lire('ItemArmorTotal'), 'ItemLevel');
   const armLieu = indexer(lire('ArmorLocation'));
   const armQualite = indexer(lire('ItemArmorQuality'));
+  const armBouclier = indexer(lire('ItemArmorShield'), 'ItemLevel');
   const fichiers = indexer(lire('ManifestInterfaceData'));
   const apparenceObjet = new Map<string, Ligne>();
   for (const r of lire('ItemModifiedAppearance')) {
@@ -213,16 +219,19 @@ export function extraireObjets(build: string, hotfix: Hotfix, eq: EquipementClas
         } as const)[place.matiere ?? 'tissu'];
         armure = Math.round(nombre(t[total]) * nombre(l[lieu]) * nombre(aq[`Qualitymod_${q}`]));
       }
+    } else if (emp === 'bouclier') {
+      // Boucliers : leur propre table d'armure, par niveau d'objet et qualité.
+      armure = Math.round(nombre(armBouclier.get(String(ilvl))?.[`Quality_${q}`]));
     }
 
     let arme: Arme | undefined;
     const lanceur = (nombre(s.Flags_4) & 0x100) !== 0;
-    if (emp === 'arme2m' || emp === 'arme1m' || emp === 'distance') {
+    if (emp === 'arme2m' || emp === 'arme1m' || emp === 'armemg' || emp === 'distance') {
       const sousArme = nombre(it.SubclassID);
-      const table = emp === 'arme2m' ? degats2 : emp === 'arme1m' ? degats1
+      const table = emp === 'arme2m' ? degats2 : emp === 'arme1m' || emp === 'armemg' ? degats1
         : sousArme === 19 ? degatsBaguette : sousArme === 16 ? degatsJet : degatsDistance;
       // Arme de lanceur (mêlée) : la formule surestime les dégâts, on applique le rapport mesuré.
-      const facteur = lanceur && emp !== 'distance' ? FACTEUR_LANCEUR[emp] : 1;
+      const facteur = lanceur && emp !== 'distance' ? FACTEUR_LANCEUR[emp === 'arme2m' ? 'arme2m' : 'arme1m'] : 1;
       const dps = nombre(table.get(String(ilvl))?.[`Quality_${q}`]) * facteur;
       const vitesse = nombre(s.ItemDelay) / 1000;
       const ecart = nombre(s.DmgVariance);

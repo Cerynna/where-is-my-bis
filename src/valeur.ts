@@ -4,7 +4,14 @@ import type { Specialisation } from './classes/types.ts';
 import type { Etat } from './etat.ts';
 import type { Emplacement, Objet, Perso, Stat } from './types.ts';
 
-export function valeur(o: Objet, spe: Specialisation): number {
+/** Une arme en main gauche ne frappe qu'à moitié (pénalité de l'ambidextrie) ; ses stats comptent en entier. */
+const MAIN_GAUCHE = 0.5;
+
+/**
+ * Valeur d'un objet pour une spécialisation. `mainGauche` : arme tenue en main gauche
+ * (toujours le cas d'une arme de main gauche, possible pour une arme à une main).
+ */
+export function valeur(o: Objet, spe: Specialisation, mainGauche = o.emplacement === 'armemg'): number {
   if (o.emplacement === 'relique') {
     // Effet de relique non chiffrable : on garde la plus récente de celles qui servent à la spécialisation.
     return spe.reliques && o.effets.some((e) => spe.reliques!.test(e.texte)) ? 10 + o.ilvl / 10 : 0;
@@ -12,8 +19,8 @@ export function valeur(o: Objet, spe: Specialisation): number {
   const p = spe.poids;
   let v = 0;
   for (const [k, n] of Object.entries(o.stats) as [Stat, number][]) v += (p[k] ?? 0) * n;
-  // DPS de l'arme : celui de mêlée et celui de l'arme à distance (baguette…) ne pèsent pas pareil.
-  if (o.arme) v += (o.emplacement === 'distance' ? p.dpsDistance ?? 0 : p.dps) * o.arme.dps;
+  // DPS de l'arme : celui de mêlée et celui de l'arme à distance (baguette, arc…) ne pèsent pas pareil.
+  if (o.arme) v += (o.emplacement === 'distance' ? p.dpsDistance ?? 0 : p.dps * (mainGauche ? MAIN_GAUCHE : 1)) * o.arme.dps;
   v += p.armureBase * o.armure;
   return v;
 }
@@ -95,11 +102,19 @@ export function meilleurEnsemble(objets: Objet[], e: Etat, spe: Specialisation, 
   const premier = (emp: Emplacement) => par([emp])[0] ?? null;
   const bagues = par(['doigt']);
   const bijoux = par(['bijou']).filter((o) => v(o) > 0);
-  // Arme à deux mains, ou arme à une main + objet tenu en main gauche (ou bouclier) : la paire qui vaut le plus.
-  const deuxMains = premier('arme2m');
-  const uneMain = premier('arme1m');
-  const mainGauche = par(['maing', 'bouclier']).filter((o) => v(o) > 0)[0] ?? null;
-  const paire = uneMain && v(uneMain) + v(mainGauche) > v(deuxMains);
+  // Arme à deux mains, ou arme à une main + objet tenu en main gauche, bouclier ou seconde arme
+  // (spés à deux armes) : la combinaison qui vaut le plus.
+  // Certaines spés exigent un type d'arme en main droite (dague pour Attaque sournoise…).
+  const armeOk = (o: Objet) => !spe.armesMain || !o.arme || spe.armesMain.includes(o.arme.sous);
+  const deuxMains = par(['arme2m']).filter(armeOk)[0] ?? null;
+  const uneMain = par(['arme1m']).filter(armeOk)[0] ?? null;
+  const vMG = (o: Objet) => valeur(o, spe, true);
+  const mainGauche = [
+    ...par(['maing', 'bouclier']),
+    // Arme à une main « Une main » (pas « Main droite ») ou arme de main gauche.
+    ...(spe.ambidextre ? portables.filter((o) => o.emplacement === 'armemg' || (o.emplacement === 'arme1m' && o.inv === 13)) : []),
+  ].filter((o) => o.id !== uneMain?.id && vMG(o) > 0).sort((a, b) => vMG(b) - vMG(a))[0] ?? null;
+  const paire = uneMain && v(uneMain) + (mainGauche ? vMG(mainGauche) : 0) > v(deuxMains);
   return {
     tete: premier('tete'), cou: premier('cou'), epaules: premier('epaules'), dos: premier('dos'),
     torse: premier('torse'), poignets: premier('poignets'), mains: premier('mains'), taille: premier('taille'),
@@ -107,7 +122,7 @@ export function meilleurEnsemble(objets: Objet[], e: Etat, spe: Specialisation, 
     doigt1: bagues[0] ?? null, doigt2: bagues[1] ?? null, bijou1: bijoux[0] ?? null, bijou2: bijoux[1] ?? null,
     arme: paire ? uneMain : deuxMains ?? uneMain, maing: paire ? mainGauche : null,
     relique: par(['relique']).filter((o) => v(o) > 0)[0] ?? null,
-    distance: par(['distance']).filter((o) => v(o) > 0)[0] ?? null,
+    distance: par(['distance']).filter((o) => v(o) > 0 && (!spe.armesDistance || !o.arme || spe.armesDistance.includes(o.arme.sous)))[0] ?? null,
   };
 }
 
@@ -129,16 +144,16 @@ export function comparer(ens: Ensemble, perso: Perso | null, portes: Objet[], sp
     const o = portes.find((x) => x.id === p.id);
     if (o) parCase.set(c, o);
   }
-  const statut = (o: Objet | null, ancien: Objet | null): Statut => {
+  const statut = (o: Objet | null, ancien: Objet | null, mg = false): Statut => {
     if (!o) return { type: 'aucun' };
     if (ids.has(o.id)) return { type: 'porte' };
-    const v = valeur(o, spe);
-    const va = ancien ? valeur(ancien, spe) : 0;
+    const v = valeur(o, spe, mg || undefined);
+    const va = ancien ? valeur(ancien, spe, mg || undefined) : 0;
     // Gain infini : la pièce remplacée n'a aucune stat utile (sacoche, bijou de métier…).
     return { type: 'mieux', remplace: ancien, gain: va > 0 ? (v - va) / va : Number.POSITIVE_INFINITY };
   };
   for (const c of ['tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds', 'arme', 'maing', 'relique', 'distance'] as Case[]) {
-    res[c] = statut(ens[c], parCase.get(c) ?? null);
+    res[c] = statut(ens[c], parCase.get(c) ?? null, c === 'maing');
   }
   for (const [a, b] of [['doigt1', 'doigt2'], ['bijou1', 'bijou2']] as [Case, Case][]) {
     const choisis = [ens[a], ens[b]];
@@ -159,7 +174,9 @@ export function comparer(ens: Ensemble, perso: Perso | null, portes: Objet[], sp
 /** Valeur de la pièce portée la plus faible pour ce type d'emplacement (0 si vide). */
 export function valeurPortee(portes: Objet[], emplacement: Emplacement, spe: Specialisation): number | null {
   if (!portes.length) return null;
-  const groupe: Emplacement[] = emplacement === 'arme2m' || emplacement === 'arme1m' ? ['arme2m', 'arme1m'] : [emplacement];
+  const groupe: Emplacement[] = emplacement === 'arme2m' || emplacement === 'arme1m' ? ['arme2m', 'arme1m']
+    : emplacement === 'maing' || emplacement === 'bouclier' || emplacement === 'armemg' ? ['maing', 'bouclier', 'armemg']
+    : [emplacement];
   const v = portes.filter((o) => groupe.includes(o.emplacement)).map((o) => valeur(o, spe));
   const attendu = emplacement === 'doigt' || emplacement === 'bijou' ? 2 : 1;
   if (v.length < attendu) return 0;

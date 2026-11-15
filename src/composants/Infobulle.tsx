@@ -140,7 +140,9 @@ export function NomObjet({ objet, className }: { objet: Objet; className?: strin
 
 /** Emplacements portés que remplacerait l'objet (une arme à deux mains remplace aussi la main gauche). */
 const GROUPES: Partial<Record<Objet['emplacement'], Objet['emplacement'][]>> = {
-  arme2m: ['arme2m', 'arme1m', 'maing'], arme1m: ['arme2m', 'arme1m'], maing: ['maing', 'arme2m'],
+  arme2m: ['arme2m', 'arme1m', 'maing', 'bouclier', 'armemg'], arme1m: ['arme2m', 'arme1m'],
+  maing: ['maing', 'bouclier', 'armemg', 'arme2m'], bouclier: ['maing', 'bouclier', 'armemg', 'arme2m'],
+  armemg: ['maing', 'bouclier', 'armemg', 'arme2m'],
 };
 
 /**
@@ -216,10 +218,13 @@ function ContenuInfobulle({ o, etat, portes, compact }: { o: Objet; etat: Etat; 
       <div className={o.niveau > niveau ? 'ib-rouge' : undefined}>
         {o.niveauType === 'quete' ? `Quête disponible au niveau ${o.niveau}`
           : o.niveauType === 'estime' ? `Aucun niveau requis (≈ niveau ${o.niveau})`
-          : o.niveauType === 'donjon' ? `Niveau ${o.niveauRequis ?? '?'} requis` : `Niveau ${o.niveau} requis`}
+          : o.niveauType === 'donjon' || o.niveauType === 'matiere' ? `Niveau ${o.niveauRequis ?? '?'} requis` : `Niveau ${o.niveau} requis`}
       </div>
       {o.niveauType === 'donjon' && (
         <div className={o.niveau > niveau ? 'ib-rouge' : undefined}>Ne tombe que dans des donjons conseillés à partir du niveau {o.niveau}</div>
+      )}
+      {o.niveauType === 'matiere' && o.matiere && (
+        <div className={o.niveau > niveau ? 'ib-rouge' : undefined}>{NOMS_MATIERES[o.matiere]} : portables à partir du niveau {o.niveau}</div>
       )}
       <div className="ib-jaune">Niveau d’objet {o.ilvl}</div>
       {STATS_VERTES.map(([k, l]) => o.stats[k] ? <div key={k} className="ib-vert">Équipé : +{o.stats[k]} {l}.</div> : null)}

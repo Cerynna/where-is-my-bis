@@ -30,6 +30,8 @@ export interface EquipementClasse {
   bouclier: boolean;
   /** Relique : idole (8), libram (7) ou totem (9). */
   relique?: { sous: number; nom: string };
+  /** Ambidextrie (compétence 118 de SkillRaceClassInfo sur Forever) : peut porter une arme en main gauche. */
+  ambidextre?: boolean;
 }
 
 /** Sous-classes d'armes à distance : arc (2), arme à feu (3), arme de jet (16), arbalète (18), baguette (19). */
@@ -48,34 +50,34 @@ export function caseDistance(eq: EquipementClasse): { emplacement: 'relique' | '
 
 export const EQUIPEMENTS: EquipementClasse[] = [
   {
-    id: 'guerrier', nom: 'Guerrier', idJeu: 1, enumArmurerie: 'WARRIOR', couleur: '#C69B6D', icone: 'classicon_warrior', actif: false,
+    id: 'guerrier', nom: 'Guerrier', idJeu: 1, enumArmurerie: 'WARRIOR', couleur: '#C69B6D', icone: 'classicon_warrior', actif: true,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }, { matiere: 'mailles' }, { matiere: 'plaques', niveau: 40 }],
-    armes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 15, 16, 18], bouclier: true,
+    armes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 15, 16, 18], bouclier: true, ambidextre: true,
   },
   {
-    id: 'paladin', nom: 'Paladin', idJeu: 2, enumArmurerie: 'PALADIN', couleur: '#F48CBA', icone: 'classicon_paladin', actif: false,
+    id: 'paladin', nom: 'Paladin', idJeu: 2, enumArmurerie: 'PALADIN', couleur: '#F48CBA', icone: 'classicon_paladin', actif: true,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }, { matiere: 'mailles' }, { matiere: 'plaques', niveau: 40 }],
     armes: [0, 1, 4, 5, 6, 7, 8], bouclier: true, relique: { sous: 7, nom: 'Libram' },
   },
   {
-    id: 'chasseur', nom: 'Chasseur', idJeu: 3, enumArmurerie: 'HUNTER', couleur: '#AAD372', icone: 'classicon_hunter', actif: false,
+    id: 'chasseur', nom: 'Chasseur', idJeu: 3, enumArmurerie: 'HUNTER', couleur: '#AAD372', icone: 'classicon_hunter', actif: true,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }, { matiere: 'mailles', niveau: 40 }],
-    armes: [0, 1, 2, 3, 6, 7, 8, 10, 13, 15, 16, 18], bouclier: false,
+    armes: [0, 1, 2, 3, 6, 7, 8, 10, 13, 15, 16, 18], bouclier: false, ambidextre: true,
   },
   {
-    id: 'voleur', nom: 'Voleur', idJeu: 4, enumArmurerie: 'ROGUE', couleur: '#FFF468', icone: 'classicon_rogue', actif: false,
+    id: 'voleur', nom: 'Voleur', idJeu: 4, enumArmurerie: 'ROGUE', couleur: '#FFF468', icone: 'classicon_rogue', actif: true,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }],
-    armes: [0, 2, 3, 4, 7, 13, 15, 16, 18], bouclier: false,
+    armes: [0, 2, 3, 4, 7, 13, 15, 16, 18], bouclier: false, ambidextre: true,
   },
   {
-    id: 'pretre', nom: 'Prêtre', idJeu: 5, enumArmurerie: 'PRIEST', couleur: '#FFFFFF', icone: 'classicon_priest', actif: false,
+    id: 'pretre', nom: 'Prêtre', idJeu: 5, enumArmurerie: 'PRIEST', couleur: '#FFFFFF', icone: 'classicon_priest', actif: true,
     armures: [{ matiere: 'tissu' }],
     armes: [4, 10, 15, 19], bouclier: false,
   },
   {
-    id: 'chaman', nom: 'Chaman', idJeu: 7, enumArmurerie: 'SHAMAN', couleur: '#0070DD', icone: 'classicon_shaman', actif: false,
+    id: 'chaman', nom: 'Chaman', idJeu: 7, enumArmurerie: 'SHAMAN', couleur: '#0070DD', icone: 'classicon_shaman', actif: true,
     armures: [{ matiere: 'tissu' }, { matiere: 'cuir' }, { matiere: 'mailles', niveau: 40 }],
-    armes: [0, 1, 4, 5, 10, 13, 15], bouclier: true, relique: { sous: 9, nom: 'Totem' },
+    armes: [0, 1, 4, 5, 10, 13, 15], bouclier: true, relique: { sous: 9, nom: 'Totem' }, ambidextre: true,
   },
   {
     id: 'mage', nom: 'Mage', idJeu: 8, enumArmurerie: 'MAGE', couleur: '#3FC7EB', icone: 'classicon_mage', actif: true,
@@ -83,7 +85,7 @@ export const EQUIPEMENTS: EquipementClasse[] = [
     armes: [7, 10, 15, 19], bouclier: false,
   },
   {
-    id: 'demoniste', nom: 'Démoniste', idJeu: 9, enumArmurerie: 'WARLOCK', couleur: '#8788EE', icone: 'classicon_warlock', actif: false,
+    id: 'demoniste', nom: 'Démoniste', idJeu: 9, enumArmurerie: 'WARLOCK', couleur: '#8788EE', icone: 'classicon_warlock', actif: true,
     armures: [{ matiere: 'tissu' }],
     armes: [7, 10, 15, 19], bouclier: false,
   },

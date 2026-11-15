@@ -28,7 +28,8 @@ function details(classe: EquipementClasse): [Emplacement[], string, Case[]][] {
     [['torse'], 'Torse', ['torse']], [['poignets'], 'Poignets', ['poignets']], [['mains'], 'Mains', ['mains']],
     [['taille'], 'Taille', ['taille']], [['jambes'], 'Jambes', ['jambes']], [['pieds'], 'Pieds', ['pieds']],
     [['doigt'], 'Doigts', ['doigt1', 'doigt2']], [['bijou'], 'Bijoux', ['bijou1', 'bijou2']],
-    [['arme2m', 'arme1m'], 'Arme', ['arme']], [['maing', 'bouclier'], 'Main gauche', ['maing']],
+    [['arme2m', 'arme1m'], 'Arme', ['arme']],
+    [classe.ambidextre ? ['maing', 'bouclier', 'armemg'] : ['maing', 'bouclier'], 'Main gauche', ['maing']],
   ];
   const dist = caseDistance(classe);
   return dist ? [...d, [[dist.emplacement], dist.nom, [dist.emplacement]]] : d;
@@ -135,7 +136,7 @@ function Bilan({ ens, portes }: { ens: TEnsemble; portes: Objet[] }) {
       <dl>
         {lignes.filter(([k]) => t[k] || avant?.t[k]).map(([k, l]) => (<div key={k}><dt>{l}</dt>{cellule(avant?.t[k], t[k])}</div>))}
         <div><dt>Armure des pièces</dt>{cellule(avant ? avant.armure + (avant.t.armure ?? 0) : undefined, armure + (t.armure ?? 0))}</div>
-        {physique && ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
+        {physique && spe.poids.dps >= 1 && ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
         {!!spe.poids.dpsDistance && ens.distance?.arme && (
           <div><dt>DPS {caseDistance(classe)?.nom === 'Baguette' ? 'de la baguette' : 'à distance'}</dt>
             {cellule(distancePortee?.arme?.dps, ens.distance.arme.dps, 1)}</div>

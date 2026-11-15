@@ -33,6 +33,12 @@ export interface Specialisation {
   note: string;
   /** Nom de la spécialisation active sur l'armurerie (« Combat farouche »…), pour la choisir à l'import. */
   armurerie?: RegExp;
+  /** Spé à deux armes : la main gauche peut porter une seconde arme (la classe doit avoir l'ambidextrie). */
+  ambidextre?: boolean;
+  /** Types d'arme permis en main droite (sous-classes), quand la spé en exige un (dague pour Attaque sournoise…). */
+  armesMain?: number[];
+  /** Types d'arme à distance permis (les tirs du chasseur exigent un arc, un fusil ou une arbalète). */
+  armesDistance?: number[];
 }
 
 export interface Classe extends EquipementClasse {

@@ -181,6 +181,14 @@ export function construire(build: string, classe: string): Bilan {
       }
     }
 
+    // Mailles (chasseur, chaman) et plaques (guerrier, paladin) ne se portent qu'à partir du niveau 40.
+    const niveauMatiere = laClasse.armures.find((a) => a.matiere === c.matiere)?.niveau;
+    if (niveauMatiere && niveau < niveauMatiere) {
+      niveauRequis ??= niveau;
+      niveau = niveauMatiere;
+      niveauType = 'matiere';
+    }
+
     const maroquinier = c.liaison === 1 && sources.some((s) => s.type === 'metier' && /cuir/i.test(s.lieu));
     objets.push({
       id: c.id, nom: c.nom, nomEn: c.nomEn, q: c.q, ilvl: c.ilvl, niveau, niveauType, niveauRequis, liaison: c.liaison, unique: c.unique,

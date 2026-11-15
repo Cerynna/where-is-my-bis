@@ -2,12 +2,21 @@
 
 Site statique (React + TypeScript + Vite, aucun serveur) qui donne le meilleur équipement de chaque classe, du niveau 1 au niveau 60, sur WoW Forever.
 
-Le site est prévu pour les neuf classes. Pour l'instant, deux sont faites :
+Les neuf classes sont faites, avec toutes leurs spécialisations :
 
-- le **druide**, avec ses quatre spécialisations : félin, ours, équilibre et restauration ;
-- le **mage**, avec ses trois spécialisations : arcanes, feu et givre.
+| Classe | Spécialisations |
+| --- | --- |
+| Guerrier | Armes, Fureur (deux armes), Protection |
+| Paladin | Sacré, Protection, Vindicte |
+| Chasseur | Maîtrise des bêtes, Précision, Survie |
+| Voleur | Assassinat et Finesse (dague en main droite), Combat |
+| Prêtre | Discipline, Sacré, Ombre |
+| Chaman | Élémentaire, Amélioration (deux armes), Restauration |
+| Mage | Arcanes, Feu, Givre |
+| Démoniste | Affliction, Démonologie, Destruction |
+| Druide | Félin, Ours, Équilibre, Restauration |
 
-Les autres classes ont leur carte sur l'accueil et une page « Bientôt ».
+Une classe sans données ni spécialisations aurait une page « Bientôt ».
 
 ## Pages
 
@@ -30,7 +39,8 @@ Pour une classe, les objets proposés sont :
 
 Les deux vues d'une classe :
 
-- **Ensemble conseillé** : une fiche de personnage avec le meilleur objet de chaque emplacement à ton niveau. Chaque emplacement a ses alternatives et la prochaine amélioration. Pour l'arme, la fiche compare une arme à deux mains à la paire arme à une main + main gauche (ou bouclier), et garde la meilleure.
+- **Ensemble conseillé** : une fiche de personnage avec le meilleur objet de chaque emplacement à ton niveau. Chaque emplacement a ses alternatives et la prochaine amélioration. Pour l'arme, la fiche compare une arme à deux mains à la paire arme à une main + main gauche, et garde la meilleure. La main gauche peut être un objet tenu, un bouclier ou, pour les spés à deux armes, une seconde arme : elle ne frappe qu'à moitié (son DPS compte pour moitié), mais ses stats comptent en entier.
+- Les mailles (chasseur, chaman) et les plaques (guerrier, paladin) ne sont proposées qu'à partir du niveau 40.
 - **Base d'objets** : tous les objets, avec recherche et filtres. Les filtres portent sur le niveau, la spécialisation, la faction, la provenance, le taux de butin, la matière, la qualité, l'hôtel des ventes, l'emplacement, le donjon ou la zone, les stats et le tri.
 
 Les réglages sont gardés dans l'adresse, ce qui permet de partager un lien, et dans le navigateur (une mémoire par classe).
@@ -63,16 +73,19 @@ CLASSE=paladin npm run donnees      # même chose pour une autre classe (une foi
 npm run donnees:construire          # réassemble les données sans rien retélécharger
 ```
 
-## Ajouter une classe
+## Les classes
 
-Toutes les classes sont déjà décrites dans `src/classes/equipement.ts` : matières d'armure (mailles et plaques au niveau 40), armes, bouclier, relique, couleur et icône. Les armes ont été vérifiées pour les neuf classes dans la table SkillRaceClassInfo de Forever (le druide manie aussi les armes d'hast, le voleur les haches à une main). Les matières et les reliques viennent du jeu classique.
+`src/classes/equipement.ts` décrit ce que chaque classe peut équiper : matières d'armure (mailles et plaques au niveau 40), armes, bouclier, relique, ambidextrie, couleur et icône. Les armes et l'ambidextrie ont été vérifiées pour les neuf classes dans la table SkillRaceClassInfo de Forever : le druide manie aussi les armes d'hast, le voleur les haches à une main, et le chaman peut porter deux armes. Les matières et les reliques viennent du jeu classique.
 
-Pour en activer une :
+Les spécialisations sont dans `src/classes/<classe>.ts`. Pour chacune :
 
-1. Créer `src/classes/<classe>.ts` avec ses spécialisations, sur le modèle de `druide.ts` ou `mage.ts`. Pour chacune : poids des stats, poids du DPS de l'arme de mêlée et de l'arme à distance, expression des sorts de la spé (pour les reliques et le tri des objets), stats du filtre « doit avoir », lignes du bilan, et l'expression qui reconnaît la spé dans l'armurerie.
-2. L'enregistrer dans `SPECS` (`src/classes/index.ts`).
-3. Passer `actif: true` dans `src/classes/equipement.ts`.
-4. Lancer `CLASSE=<classe> npm run donnees`. Les tables du jeu et les fiches wowf.io déjà téléchargées sont réutilisées. Seules les fiches des objets propres à la classe sont à récupérer.
+- poids des stats, du DPS de l'arme de mêlée et de celui de l'arme à distance ;
+- expression des sorts de la spé (classement des reliques et tri des objets utiles) ;
+- `ambidextre` (spé à deux armes) et `armesMain` (type d'arme exigé en main droite, comme la dague du voleur Assassinat) ;
+- stats du filtre « doit avoir », lignes du bilan, phrase d'aide ;
+- l'expression qui reconnaît la spé sur l'armurerie.
+
+Pour retoucher une classe : modifier son fichier, puis relancer `CLASSE=<classe> npm run donnees:construire` si le tri des objets utiles change. Pour une nouvelle classe : l'enregistrer dans `SPECS` (`src/classes/index.ts`), passer `actif: true` et lancer `CLASSE=<classe> npm run donnees`. Les tables du jeu et les fiches wowf.io déjà téléchargées sont réutilisées.
 
 Les scripts de données trient les objets « utiles » à partir des spécialisations : une stat qui pèse plus de 0,1 pour au moins une spé, une arme, une relique, ou un effet qui cite un de ses sorts (expressions des reliques).
 
@@ -118,6 +131,14 @@ Après une mise à jour du jeu, relancer `npm run donnees` (les fiches déjà t�
 ## Valeur d'un objet
 
 `src/valeur.ts` additionne les stats de l'objet pondérées par la spécialisation, plus le DPS de l'arme (mêlée et distance ont chacune leur poids). Les poids de chaque spé sont dans `src/classes/<classe>.ts`.
+
+Règles communes :
+
+- **Mêlée** (guerrier Armes et Fureur, paladin Vindicte, voleur, chaman Amélioration, druide félin) : environ 14 PA par point de DPS de l'arme ; toucher et expertise un cran au-dessus du critique.
+- **Chasseur** : c'est l'arme à distance qui vaut 14 par point de DPS ; les armes de mêlée ne comptent que pour leurs stats.
+- **Tanks** (guerrier et paladin Protection, druide ours) : Endurance, défense, esquive, parade, puis l'armure, celle du bouclier comprise.
+- **Soigneurs** : soins et puissance des sorts, puis mana toutes les 5 s, Intelligence et Esprit selon la spé.
+- **Sorts d'attaque** : chaque spé ne compte que les dégâts de son école (Ombre pour le prêtre Ombre, Nature pour le chaman Élémentaire…). Seule exception, la Destruction du démoniste, qui lance autant d'Ombre que de Feu.
 
 Pour le mage, tout passe par les sorts : puissance des sorts et dégâts des sorts d'abord, puis les dégâts de l'école de la spé (Arcanes, Feu ou Givre), le toucher, le critique et la hâte. Les Arcanes donnent plus de poids à l'Intelligence, à l'Esprit et au mana toutes les 5 s ; le Feu au critique. La baguette compte aussi par son DPS (0,6 par point), car on s'en sert beaucoup en montant de niveau.
 

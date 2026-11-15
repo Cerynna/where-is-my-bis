@@ -5,12 +5,12 @@ export const EMPLACEMENTS: Record<Emplacement, string> = {
   tete: 'Tête', cou: 'Cou', epaules: 'Épaules', dos: 'Dos', torse: 'Torse', poignets: 'Poignets',
   mains: 'Mains', taille: 'Taille', jambes: 'Jambes', pieds: 'Pieds', doigt: 'Doigt', bijou: 'Bijou',
   arme2m: 'Arme à deux mains', arme1m: 'Arme à une main', maing: 'Main gauche', bouclier: 'Bouclier', relique: 'Relique',
-  distance: 'À distance',
+  distance: 'À distance', armemg: 'Arme de main gauche',
 };
 
 export const ORDRE_EMPLACEMENTS: Emplacement[] = [
   'tete', 'cou', 'epaules', 'dos', 'torse', 'poignets', 'mains', 'taille', 'jambes', 'pieds',
-  'doigt', 'bijou', 'arme2m', 'arme1m', 'maing', 'bouclier', 'relique', 'distance',
+  'doigt', 'bijou', 'arme2m', 'arme1m', 'armemg', 'maing', 'bouclier', 'relique', 'distance',
 ];
 
 /** Libellé d'un emplacement pour une classe : la relique et l'arme à distance portent le nom de la classe (Idole, Baguette…). */
@@ -23,7 +23,7 @@ export function libelleEmplacement(e: Emplacement, classe: EquipementClasse): st
 export const INVENTAIRE: Record<number, string> = {
   1: 'Tête', 2: 'Cou', 3: 'Épaules', 5: 'Torse', 20: 'Torse', 6: 'Taille', 7: 'Jambes', 8: 'Pieds', 9: 'Poignets',
   10: 'Mains', 11: 'Doigt', 12: 'Bijou', 16: 'Dos', 13: 'Une main', 21: 'Main droite', 17: 'Deux mains',
-  14: 'Main gauche', 23: 'Tenu en main gauche', 28: 'Relique', 15: 'À distance', 25: 'Armes de jet', 26: 'À distance',
+  14: 'Main gauche', 22: 'Main gauche', 23: 'Tenu en main gauche', 28: 'Relique', 15: 'À distance', 25: 'Armes de jet', 26: 'À distance',
 };
 
 export const ARMES: Record<number, string> = {
@@ -50,7 +50,8 @@ export const STATS_BLANCHES: [Stat, string][] = [
 export const STATS_VERTES: [Stat, string][] = [
   ['pa', 'à la puissance d’attaque'], ['crit', 'au score de coup critique'], ['tou', 'au score de toucher'],
   ['hate', 'au score de hâte'], ['exp', 'à l’expertise'], ['def', 'à la défense'], ['esq', 'au score d’esquive'],
-  ['par', 'au score de parade'], ['blocage', 'à la valeur de blocage'], ['armure', 'à l’armure'],
+  ['par', 'au score de parade'], ['sbloc', 'au score de blocage'], ['blocage', 'à la valeur de blocage'], ['armure', 'à l’armure'],
+  ['pad', 'à la puissance d’attaque à distance'],
   ['pa_mv', 'à la puissance d’attaque contre les morts-vivants'], ['pa_hum', 'à la puissance d’attaque contre les humanoïdes'],
   ['pa_bete', 'à la puissance d’attaque contre les bêtes'], ['pa_dem', 'à la puissance d’attaque contre les démons'],
   ['pds', 'à la puissance des sorts'], ['soins', 'aux soins prodigués'], ['dsorts', 'aux dégâts des sorts'],
@@ -66,7 +67,7 @@ export const COURT: Partial<Record<Stat, string>> = {
   pa_bete: 'PA bête', pa_dem: 'PA démon', rfeu: 'Rés. feu', rgivre: 'Rés. givre', rombre: 'Rés. ombre',
   rnature: 'Rés. nature', rarcane: 'Rés. arcanes', pds: 'PdS', dsorts: 'Dégâts sorts', soins: 'Soins', blocage: 'Blocage',
   mp5: 'Mana/5', dnature: 'Nature', darcane: 'Arcanes', dfeu: 'Feu', dgivre: 'Givre', dombre: 'Ombre', dsacre: 'Sacré',
-  dphys: 'Dégâts phys.', penet: 'Pénétration',
+  dphys: 'Dégâts phys.', penet: 'Pénétration', pad: 'PA distance', sbloc: 'Score blocage',
 };
 
 export function nombre(n: number, decimales = 0): string {

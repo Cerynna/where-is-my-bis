@@ -74,6 +74,7 @@ const STATS: Record<string, Stat> = {
   FIRE_RESISTANCE: 'rfeu', FROST_RESISTANCE: 'rgivre', SHADOW_RESISTANCE: 'rombre', NATURE_RESISTANCE: 'rnature', ARCANE_RESISTANCE: 'rarcane',
   // Noms supposés (pas encore vus sur une page d'armurerie) : sans effet s'ils n'existent pas.
   MANA_REGENERATION: 'mp5', HEALTH_REGENERATION: 'vie5', SPELL_PENETRATION: 'penet',
+  RANGED_ATTACK_POWER: 'pad', BLOCK_RATING: 'sbloc',
 };
 /**
  * Stats que l'armurerie sait donner. Pour les autres (dégâts par école, soins, dégâts des sorts…),
@@ -84,7 +85,7 @@ const QUALITES: Record<string, Objet['q']> = { POOR: 0, COMMON: 1, UNCOMMON: 2, 
 const INVENTAIRE: Record<string, number> = {
   HEAD: 1, NECK: 2, SHOULDER: 3, CHEST: 5, ROBE: 20, WAIST: 6, LEGS: 7, FEET: 8, WRIST: 9, HAND: 10, FINGER: 11,
   TRINKET: 12, CLOAK: 16, WEAPON: 13, WEAPONMAINHAND: 21, TWOHWEAPON: 17, RELIC: 28,
-  RANGED: 15, THROWN: 25, RANGEDRIGHT: 26, HOLDABLE: 23, SHIELD: 14,
+  RANGED: 15, THROWN: 25, RANGEDRIGHT: 26, HOLDABLE: 23, SHIELD: 14, WEAPONOFFHAND: 22,
 };
 /** Emplacement de l'armurerie → case de notre fiche. La case « ranged » est la relique ou l'arme à distance. */
 const CASES: Record<string, [string, Emplacement]> = {
@@ -114,7 +115,7 @@ function versObjet(a: ObjetArmurerie, emplacement: Emplacement): Objet {
     niveau: a.requirements?.level?.value ?? 1,
     liaison: a.binding?.type === 'ON_ACQUIRE' ? 1 : 2,
     unique: a.unique_equipped ? 2 : undefined,
-    emplacement: inv === 13 || inv === 21 ? 'arme1m' : emplacement,
+    emplacement: inv === 13 || inv === 21 ? 'arme1m' : inv === 22 ? 'armemg' : inv === 14 ? 'bouclier' : emplacement,
     inv,
     stats,
     armure: a.armor?.value ?? 0,

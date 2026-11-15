@@ -7,11 +7,15 @@ export type Emplacement =
   | 'mains' | 'taille' | 'jambes' | 'pieds' | 'doigt' | 'bijou'
   | 'arme2m' | 'arme1m' | 'maing' | 'bouclier' | 'relique'
   /** Arme à distance : baguette, arc, fusil, arbalète, arme de jet. */
-  | 'distance';
+  | 'distance'
+  /** Arme de main gauche (InventoryType 22), pour les classes qui manient deux armes. */
+  | 'armemg';
 
 export type Stat =
   | 'agi' | 'for' | 'end' | 'int' | 'esp'
   | 'pa' | 'crit' | 'tou' | 'hate' | 'exp' | 'def' | 'esq' | 'par' | 'armure' | 'blocage'
+  /** Puissance d'attaque à distance, score de blocage */
+  | 'pad' | 'sbloc'
   | 'pa_mv' | 'pa_hum' | 'pa_bete' | 'pa_dem'
   | 'pds' | 'soins' | 'dsorts' | 'mp5' | 'vie5' | 'penet'
   | 'dnature' | 'darcane' | 'dfeu' | 'dgivre' | 'dombre' | 'dsacre' | 'dphys'
@@ -66,8 +70,8 @@ export interface Objet {
    * D'où vient `niveau` quand ce n'est pas le niveau requis : quête, estimation,
    * ou entrée du donjon (objet qui ne tombe que dans des donjons plus hauts que son niveau requis).
    */
-  niveauType?: 'quete' | 'estime' | 'donjon';
-  /** Niveau requis du jeu, quand `niveau` vient de l'entrée du donjon. */
+  niveauType?: 'quete' | 'estime' | 'donjon' | 'matiere';
+  /** Niveau requis du jeu, quand `niveau` vient de l'entrée du donjon ou de la matière (mailles, plaques au 40). */
   niveauRequis?: number;
   /** 1 = lié quand ramassé, 2 = lié quand équipé */
   liaison: 1 | 2;
