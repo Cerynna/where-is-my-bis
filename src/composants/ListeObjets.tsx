@@ -34,7 +34,7 @@ export function ListeObjets({ objets, etat, portes }: { objets: Objet[]; etat: E
     <section aria-labelledby="h-liste">
       <h2 id="h-liste">Base d’objets</h2>
       <p className="sous-titre" aria-live="polite">
-        {nombre(resultats.length)} objet{resultats.length > 1 ? 's' : ''} correspondent aux filtres
+        {nombre(resultats.length)} objet{resultats.length > 1 ? 's correspondent' : ' correspond'} aux filtres
         {etat.ameliorations && portes.length ? ', tous meilleurs que ce que tu portes' : ''}
         {etat.avance ? `, dont ceux des ${etat.avance} niveaux suivants (grisés)` : ''}.
       </p>

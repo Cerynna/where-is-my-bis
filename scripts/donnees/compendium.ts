@@ -28,7 +28,10 @@ function lire(fichier: string): string {
 
 export interface Compendium {
   sources: Map<number, Source[]>;
-  /** Objets du butin des donjons propres à Forever (gardés même s'ils n'ont pas encore été vus en jeu). */
+  /**
+   * Objets gardés même s'ils n'ont pas encore été vus en jeu : butin des donjons propres à Forever
+   * et objets des marchands de réputation JcE (Cartel Gentepression, Poudremèche, etc.).
+   */
   forever: Set<number>;
   /** Quêtes citées, pour télécharger leur page wowf.io. */
   quetes: Map<number, number[]>;
@@ -153,7 +156,11 @@ export function lireCompendium(build: string, nomsDonjons: string[]): Compendium
     const factionId = nb(champ(v, 'factionID'));
     const nomEn = ch(champ(v, 'name'));
     const honneur = champ(v, 'honor') === true;
-    const lieu = factionId ? factionsFr.get(String(factionId))?.Name_lang || nomEn : honneur ? 'Rangs d’honneur' : nomEn;
+    // Les marchands JcE (avec une catégorie dans l'addon : steamwheedle, world, warfront, dungeon) vendent
+    // déjà en jeu, même quand personne n'a encore révélé leurs objets (marchands du Cartel ajoutés après
+    // la sortie). Ceux du JcJ (rangs d'honneur, champs de bataille) restent soumis à la règle commune.
+    const jce = !!ch(champ(v, 'category'));
+    const lieu =factionId ? factionsFr.get(String(factionId))?.Name_lang || nomEn : honneur ? 'Rangs d’honneur' : nomEn;
     for (const b of liste(champ(v, 'bosses'))) {
       const rang = ch(champ(b, 'name'));
       const detail = RANGS[rang] ?? rang.replace(/^Rank (\d+)$/, 'Rang $1');
@@ -162,6 +169,7 @@ export function lireCompendium(build: string, nomsDonjons: string[]): Compendium
         const camp = nb(champ(camps, String(id)) ?? camps?.champs[String(id)]);
         const faction: Faction | undefined = camp === 1 ? 'Alliance' : camp === 2 ? 'Horde' : undefined;
         ajouter(id, { type: honneur ? 'jcj' : 'rep', lieu, detail, faction });
+        if (jce) res.forever.add(id);
       }
     }
   }
