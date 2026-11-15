@@ -52,6 +52,14 @@ L'étape 5 écarte :
 - les bâtons de lanceur de sorts dont les dégâts ne sont pas confirmés ;
 - les **butins du monde bleus et violets**, trop rares pour compter dessus. Les verts restent : ils se trouvent à l'hôtel des ventes.
 
+**AzerothCompendium.** Si l'addon est installé dans le jeu, ses fichiers de données complètent la provenance (`compendium.ts`). Le chemin se change avec `COMPENDIUM=…`. L'addon apporte :
+
+- le butin des boss et des monstres de base des donjons **et des raids**, avec leur taux de butin ;
+- les récompenses de quête ;
+- les marchands de réputation et les rangs d'honneur.
+
+Les noms anglais sont traduits avec les tables du jeu (cartes, rencontres, factions). Les noms et niveaux des quêtes viennent de leur page wowf.io en français.
+
 **Provenances manquantes.** wowf.io ne révèle pas toutes les provenances (« Provenance pas encore révélée »). Wowhead les a souvent, mais seulement dans la page affichée par un navigateur : ses données ne sont pas lisibles par un script, et sa protection anti-robots n'est pas contournée ici. Le site renvoie donc ces objets vers leur fiche Wowhead.
 
 Pour corriger durablement un objet, ajoute sa provenance dans `donnees/provenances.json` :

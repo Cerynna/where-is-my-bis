@@ -184,8 +184,12 @@ function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: O
       {STATS_BLANCHES.map(([k, l]) => o.stats[k] ? <div key={k}>{o.stats[k]! > 0 ? '+' : ''}{o.stats[k]} {l}</div> : null)}
       <div className={o.niveau > niveau ? 'ib-rouge' : undefined}>
         {o.niveauType === 'quete' ? `Quête disponible au niveau ${o.niveau}`
-          : o.niveauType === 'estime' ? `Aucun niveau requis (≈ niveau ${o.niveau})` : `Niveau ${o.niveau} requis`}
+          : o.niveauType === 'estime' ? `Aucun niveau requis (≈ niveau ${o.niveau})`
+          : o.niveauType === 'donjon' ? `Niveau ${o.niveauRequis ?? '?'} requis` : `Niveau ${o.niveau} requis`}
       </div>
+      {o.niveauType === 'donjon' && (
+        <div className={o.niveau > niveau ? 'ib-rouge' : undefined}>Ne tombe que dans des donjons conseillés à partir du niveau {o.niveau}</div>
+      )}
       <div className="ib-jaune">Niveau d’objet {o.ilvl}</div>
       {STATS_VERTES.map(([k, l]) => o.stats[k] ? <div key={k} className="ib-vert">Équipé : +{o.stats[k]} {l}.</div> : null)}
       {o.stats.mp5 ? <div className="ib-vert">Équipé : Rend {o.stats.mp5} points de mana toutes les 5 s.</div> : null}

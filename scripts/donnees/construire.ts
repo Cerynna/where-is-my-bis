@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { Donnees, Objet, Source, Stat } from '../../src/types.ts';
 import { CACHE, PUBLIC, RACINE, attendre, ecrireJson, estPrincipal, lireJson, telecharger } from './commun.ts';
 import type { Candidat } from './objets.ts';
+import { lireCompendium, sourcesQuetes } from './compendium.ts';
 import { lireDonjons, niveauxDonjons, nomDonjon } from './donjons.ts';
 import { lireFiche } from './wowf.ts';
 
@@ -54,6 +55,15 @@ export function construire(build: string): Bilan {
     ? (lireJson<Record<string, Source[] | string>>(fichierCorrections) as Record<string, Source[] | undefined>)
     : {};
   for (const k of Object.keys(corrections)) if (!Array.isArray(corrections[k])) delete corrections[k];
+  const compendium = lireCompendium(build, [...niveauxDonjon.keys()]);
+  // Niveau d'entrée d'un donjon ; pour un nom général (« Stratholme »), le plus bas de ses ailes.
+  const sansAccents = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/haches-/g, 'hache-');
+  const entreeDonjon = (lieu: string): number | undefined => {
+    const direct = niveauxDonjon.get(lieu);
+    if (direct !== undefined) return direct;
+    const ailes = [...niveauxDonjon].filter(([k]) => sansAccents(k).includes(sansAccents(lieu))).map(([, v]) => v);
+    return ailes.length ? Math.min(...ailes) : undefined;
+  };
   const ecartes: Record<string, number> = {};
   const ecarter = (raison: string) => { ecartes[raison] = (ecartes[raison] ?? 0) + 1; };
   const objets: Objet[] = [];
@@ -62,6 +72,8 @@ export function construire(build: string): Bilan {
     if (!utile(c)) { ecarter('sans stat utile au druide'); continue; }
     const fiche = lireFiche(c.id);
     const enDonjon = donjons.get(c.id) ?? [];
+    // AzerothCompendium : boss et monstres des donjons et raids, quêtes, marchands.
+    const deCompendium = [...(compendium.sources.get(c.id) ?? []), ...sourcesQuetes(compendium, c.id)];
     let sources: Source[];
     if (fiche) {
       // Les tableaux de butin des donjons sont complets : ils remplacent les lignes de donjon de la fiche.
@@ -70,10 +82,29 @@ export function construire(build: string): Bilan {
         .map((s) => (s.type === 'donjon' ? { ...s, lieu: nomDonjon(s.lieu) } : s));
       sources = [...autres, ...enDonjon];
     } else if (enDonjon.length) sources = enDonjon;
+    else if (deCompendium.length && (c.revele || connus.has(c.id) || compendium.forever.has(c.id))) sources = deCompendium;
     else if (connus.has(c.id) && !fs.existsSync(path.join(CACHE, 'wowf', 'fr', `${c.id}.html`))) {
       ecarter('fiche pas encore téléchargée'); continue;
     } else if (c.revele && c.liaison === 2) sources = [{ type: 'monde', lieu: 'Butin aléatoire' }];
     else { ecarter(c.revele ? 'provenance introuvable' : 'jamais vu en jeu'); continue; }
+    // L'addon complète : il remplace « pas encore révélée » et ajoute les types de provenance absents.
+    // Pour le butin de donjon, sa version (avec le taux de butin) remplace celle des tableaux wowf.io.
+    if (deCompendium.length && sources !== deCompendium) {
+      const ailes = sources.filter((s) => s.type === 'donjon');
+      if (deCompendium.some((s) => s.type === 'donjon')) {
+        // wowf.io découpe certaines instances par aile (Stratholme, Monastère…) : on garde son nom d'aile.
+        const n = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        for (let i = 0; i < deCompendium.length; i++) {
+          const s = deCompendium[i]!;
+          const aile = s.type === 'donjon' ? ailes.find((a) => n(a.lieu).includes(n(s.lieu))) : undefined;
+          if (aile) deCompendium[i] = { ...s, lieu: aile.lieu };
+        }
+        sources = sources.filter((s) => s.type !== 'donjon');
+      }
+      const presents = new Set(sources.filter((s) => s.type !== 'inconnue').map((s) => s.type));
+      const ajout = deCompendium.filter((s) => !presents.has(s.type));
+      if (ajout.length) sources = [...sources.filter((s) => s.type !== 'inconnue'), ...ajout];
+    }
     // Provenances ajoutées à la main (donnees/provenances.json) : elles remplacent « pas encore révélée ».
     const ajout = corrections[String(c.id)];
     if (ajout?.length) sources = [...sources.filter((s) => s.type !== 'inconnue'), ...ajout];
@@ -114,9 +145,19 @@ export function construire(build: string): Bilan {
       if (c.ilvl - niveau > 15) niveau = Math.min(60, c.ilvl - 10);
     }
 
+    // Objet qui ne tombe que dans des donjons : accessible à l'entrée du plus bas d'entre eux.
+    let niveauRequis: number | undefined;
+    if (!niveauType && sources.length && sources.every((s) => s.type === 'donjon' || s.type === 'raid')) {
+      const entrees = sources.map((s) => entreeDonjon(s.lieu));
+      if (entrees.every((n): n is number => n !== undefined)) {
+        const entree = Math.min(...entrees);
+        if (entree > niveau) { niveauRequis = niveau; niveau = entree; niveauType = 'donjon'; }
+      }
+    }
+
     const maroquinier = c.liaison === 1 && sources.some((s) => s.type === 'metier' && /cuir/i.test(s.lieu));
     objets.push({
-      id: c.id, nom: c.nom, nomEn: c.nomEn, q: c.q, ilvl: c.ilvl, niveau, niveauType, liaison: c.liaison, unique: c.unique,
+      id: c.id, nom: c.nom, nomEn: c.nomEn, q: c.q, ilvl: c.ilvl, niveau, niveauType, niveauRequis, liaison: c.liaison, unique: c.unique,
       emplacement: c.emplacement, inv: c.inv, matiere: c.matiere, stats, armure: c.armure, arme, effets, icone: c.icone, sources,
       maroquinier: maroquinier || undefined,
     });

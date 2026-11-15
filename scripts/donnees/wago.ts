@@ -5,9 +5,9 @@ import { CACHE, estPrincipal, telecharger, lireJson } from './commun.ts';
 const TABLES = [
   'ItemSparse', 'Item', 'ItemXItemEffect', 'ItemEffect', 'SpellEffect', 'SpellName', 'SpellMisc', 'SpellDuration',
   'RandPropPoints', 'ItemDamageOneHand', 'ItemDamageTwoHand', 'ItemArmorTotal', 'ArmorLocation', 'ItemArmorQuality',
-  'ManifestInterfaceData', 'ItemModifiedAppearance', 'ItemAppearance', 'DungeonEncounter', 'Map',
+  'ManifestInterfaceData', 'ItemModifiedAppearance', 'ItemAppearance', 'DungeonEncounter', 'Map', 'AreaTable', 'Faction',
 ];
-const TABLES_FR = ['ItemSparse', 'Spell', 'DungeonEncounter', 'Map'];
+const TABLES_FR = ['ItemSparse', 'Spell', 'DungeonEncounter', 'Map', 'Faction'];
 const DBD = ['ItemSparse', 'Item'];
 
 /** Dernier build « wowf » connu de wago.tools, sauf si BUILD est fixé. */

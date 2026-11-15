@@ -57,8 +57,13 @@ export interface Objet {
   ilvl: number;
   /** Niveau à partir duquel l'objet est accessible (niveau requis, sinon celui de la quête, sinon estimé). */
   niveau: number;
-  /** D'où vient `niveau` quand l'objet n'a pas de niveau requis. */
-  niveauType?: 'quete' | 'estime';
+  /**
+   * D'où vient `niveau` quand ce n'est pas le niveau requis : quête, estimation,
+   * ou entrée du donjon (objet qui ne tombe que dans des donjons plus hauts que son niveau requis).
+   */
+  niveauType?: 'quete' | 'estime' | 'donjon';
+  /** Niveau requis du jeu, quand `niveau` vient de l'entrée du donjon. */
+  niveauRequis?: number;
   /** 1 = lié quand ramassé, 2 = lié quand équipé */
   liaison: 1 | 2;
   /** 1 = Unique, 2 = Unique - Équipé */

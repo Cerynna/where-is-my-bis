@@ -4,7 +4,8 @@ import path from 'node:path';
 import { CACHE, ecrireJson } from './commun.ts';
 import { lireCacheJeu } from './cache-jeu.ts';
 import { construire, telechargerIcones } from './construire.ts';
-import { recupererDonjons } from './donjons.ts';
+import { lireCompendium, recupererQuetes } from './compendium.ts';
+import { niveauxDonjons, recupererDonjons } from './donjons.ts';
 import { extraireObjets } from './objets.ts';
 import { dernierBuild, telechargerTables } from './wago.ts';
 import { idsConnus, recupererFiches } from './wowf.ts';
@@ -22,6 +23,9 @@ for (const c of candidats) for (const s of c.statsInconnues) inconnues.set(s, (i
 console.log(`${candidats.length} candidats ; stats non reconnues :`, Object.fromEntries(inconnues));
 
 await recupererDonjons();
+// Pages des quêtes citées par AzerothCompendium pour nos objets (noms et niveaux en français)
+const comp = lireCompendium(build, [...niveauxDonjons().keys()]);
+await recupererQuetes([...new Set(candidats.flatMap((c) => comp.quetes.get(c.id) ?? []))]);
 const premier = construire(build);
 console.log(`Butin des donjons ajouté : ${premier.gardes} objets`);
 

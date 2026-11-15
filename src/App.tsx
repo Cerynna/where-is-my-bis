@@ -90,7 +90,7 @@ export function App() {
       <footer className="pied">
         <p>
           {donnees ? `${nombre(donnees.objets.length)} objets · build du jeu ${donnees.build} · données du ${new Date(donnees.genere).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}. ` : ''}
-          Stats lues dans les fichiers du jeu et le cache des objets révélés ; provenance d’après <a href="https://wowf.io" target="_blank" rel="noopener">wowf.io</a> ; fiches et icônes de <a href="https://www.wowhead.com/forever" target="_blank" rel="noopener">Wowhead</a>.
+          Stats lues dans les fichiers du jeu et le cache des objets révélés ; provenance d’après <a href="https://wowf.io" target="_blank" rel="noopener">wowf.io</a> et l’addon AzerothCompendium de D4KiR (taux de butin, raids, quêtes, réputations) ; fiches et icônes de <a href="https://www.wowhead.com/forever" target="_blank" rel="noopener">Wowhead</a>.
           Les butins du monde bleus et violets ne sont pas listés : trop rares pour compter dessus.
         </p>
         <p>Site de fan, non affilié à Blizzard Entertainment.</p>
