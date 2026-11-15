@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0d1210"/><path d="M14 44c2-10 8-18 18-22-4 6-5 11-4 16 3-8 9-13 17-15-5 5-7 11-7 17 3-4 7-6 12-6-6 4-9 9-10 16H18c-3 0-4-3-4-6z" fill="#ff7c0a"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- WIMB : un W dans une case d'équipement, avec l'étincelle du « best in slot » au-dessus -->
+  <rect width="64" height="64" rx="13" fill="#0d1210"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="10" fill="none" stroke="#ff7c0a" stroke-opacity="0.45" stroke-width="3"/>
+  <path d="M13 25 21.5 49 32 31 42.5 49 51 25" fill="none" stroke="#ff7c0a" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 6.5c1 4.2 2.8 6 7 7-4.2 1-6 2.8-7 7-1-4.2-2.8-6-7-7 4.2-1 6-2.8 7-7z" fill="#ffd100"/>
+</svg>

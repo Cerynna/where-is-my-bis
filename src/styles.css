@@ -54,7 +54,8 @@ small { color: var(--muted); }
 .entete { border-bottom: 1px solid var(--line); background: rgba(13, 18, 16, 0.92); position: sticky; top: 0; z-index: 20; backdrop-filter: blur(6px); }
 .entete-int { max-width: 1400px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; }
 .sur-titre { display: block; color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; font-weight: 700; }
-.marque { text-decoration: none; color: var(--ink); }
+.marque { text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 12px; }
+.marque .logo { flex: none; width: clamp(36px, 6vw, 44px); height: auto; }
 .titre-site { display: block; font-family: var(--font-d); font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.1; }
 .titre-site .bis { color: var(--accent); }
 .nav-site { display: flex; gap: 6px; }
