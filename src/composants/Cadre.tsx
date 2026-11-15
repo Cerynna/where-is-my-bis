@@ -12,11 +12,8 @@ export function Cadre() {
       <header className="entete">
         <div className="entete-int">
           <Link to="/" className="marque">
-            <img className="logo" src={cheminPublic('favicon.svg')} alt="" width={44} height={44} />
-            <span>
-              <span className="sur-titre">WIMB · WoW Forever · niveaux 1 à 60</span>
-              <span className="titre-site">Where Is My <span className="bis">BIS</span></span>
-            </span>
+            <img className="logo" src={cheminPublic('favicon.svg')} alt="" width={34} height={34} />
+            <span className="titre-site">Where Is My <span className="bis">BIS</span></span>
           </Link>
           <nav className="nav-site" aria-label="Site">
             <NavLink to="/" end>Classes</NavLink>

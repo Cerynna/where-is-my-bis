@@ -18,7 +18,7 @@ export function Accueil() {
   return (
     <main className="accueil">
       <section className="accueil-tete">
-        <h1>Le <em>meilleur équipement</em>, niveau par niveau</h1>
+        <h1>Le meilleur équipement, niveau par niveau</h1>
         <p>
           Pour chaque classe de WoW Forever et chaque spécialisation, l’ensemble conseillé à ton niveau, du 1 au 60, avec la provenance de chaque
           pièce : donjon et boss, quête, métier, réputation. Colle le lien de ton personnage sur l’armurerie pour voir ce qui améliorerait ton
