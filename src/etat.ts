@@ -42,7 +42,8 @@ export function defaut(classe: Classe): Etat {
     faction: 'toutes',
     maroquinier: false,
     matieres: classe.armures.map((a) => a.matiere),
-    sources: ORDRE_SOURCES.filter((s) => s !== 'autre'),
+    // « Source inconnue » décochée : ces objets n'ont pas de provenance révélée, on ne sait pas où les trouver.
+    sources: ORDRE_SOURCES.filter((s) => s !== 'autre' && s !== 'inconnue'),
     qualites: [2, 3, 4, 5],
     hvSeulement: false,
     emplacement: 'tous',
@@ -59,8 +60,11 @@ export function defaut(classe: Classe): Etat {
 
 const PREFIXE = 'forever-equipement';
 const cle = (classe: Classe) => `${PREFIXE}:etat:${classe.id}`;
-/** Version des réglages gardés : la 2 ajoute la provenance « Monstre », cochée d'office une fois. */
-const VERSION = 2;
+/**
+ * Version des réglages gardés : la 2 ajoute la provenance « Monstre », cochée d'office une fois ;
+ * la 3 décoche une fois « Source inconnue » (décochée par défaut depuis).
+ */
+const VERSION = 3;
 
 function borner(n: number, min: number, max: number): number {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : min;
@@ -111,8 +115,10 @@ export function lireEtat(classe: Classe, p: URLSearchParams): Etat {
   let local: Partial<Etat> = {};
   try {
     local = JSON.parse(localStorage.getItem(cle(classe)) ?? localStorage.getItem('feral-forever:etat') ?? '{}') as Partial<Etat>;
-    if (Number(localStorage.getItem(`${cle(classe)}:version`) ?? 1) < VERSION && local.sources && !local.sources.includes('monstre')) {
-      local.sources = [...local.sources, 'monstre'];
+    const version = Number(localStorage.getItem(`${cle(classe)}:version`) ?? 1);
+    if (local.sources) {
+      if (version < 2 && !local.sources.includes('monstre')) local.sources = [...local.sources, 'monstre'];
+      if (version < 3) local.sources = local.sources.filter((s) => s !== 'inconnue');
     }
     localStorage.setItem(`${cle(classe)}:version`, String(VERSION));
   } catch { /* stockage indisponible */ }
