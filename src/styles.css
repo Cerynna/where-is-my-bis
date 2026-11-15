@@ -56,6 +56,7 @@ small { color: var(--muted); }
 .sur-titre { display: block; color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; font-weight: 700; }
 .marque { text-decoration: none; color: var(--ink); }
 .titre-site { display: block; font-family: var(--font-d); font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.1; }
+.titre-site .bis { color: var(--accent); }
 .nav-site { display: flex; gap: 6px; }
 .nav-site a { color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: var(--r); }
 .nav-site a:hover { color: var(--ink); background: var(--panel); }

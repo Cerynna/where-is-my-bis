@@ -1,4 +1,4 @@
-# Équipement Forever
+# Where Is My BIS (WIMB)
 
 Site statique (React + TypeScript + Vite, aucun serveur) qui donne le meilleur équipement de chaque classe, du niveau 1 au niveau 60, sur WoW Forever.
 

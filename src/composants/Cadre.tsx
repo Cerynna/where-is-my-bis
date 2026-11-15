@@ -11,8 +11,8 @@ export function Cadre() {
       <header className="entete">
         <div className="entete-int">
           <Link to="/" className="marque">
-            <span className="sur-titre">WoW Forever · niveaux 1 à 60</span>
-            <span className="titre-site">Équipement Forever</span>
+            <span className="sur-titre">WIMB · WoW Forever · niveaux 1 à 60</span>
+            <span className="titre-site">Where Is My <span className="bis">BIS</span></span>
           </Link>
           <nav className="nav-site" aria-label="Site">
             <NavLink to="/" end>Classes</NavLink>
