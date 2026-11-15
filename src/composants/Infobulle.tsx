@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ARMES, COURT, INVENTAIRE, STATS_BLANCHES, STATS_VERTES, nombre } from '../libelles.ts';
+import { ARMES, COURT, INVENTAIRE, SPECIALISATIONS, STATS_BLANCHES, STATS_VERTES, nombre } from '../libelles.ts';
 import type { Etat } from '../etat.ts';
 import type { Objet, Stat } from '../types.ts';
 import { sourcesVisibles, valeur } from '../valeur.ts';
@@ -72,7 +72,16 @@ export function FournisseurInfobulle({ etat, portes, children }: { etat: Etat; p
       {children}
       {objet && (
         <div ref={ref} id="infobulle" role="tooltip" className="infobulle">
-          <ContenuInfobulle o={objet} etat={etat} portes={portes} />
+          <div className="ib-boite">
+            <ContenuInfobulle o={objet} etat={etat} portes={portes} />
+          </div>
+          {/* Comme dans le jeu : la ou les pièces portées à côté, si l'objet survolé n'est pas porté. */}
+          {piecesPortees(objet, portes, etat).map((p) => (
+            <div key={p.id} className="ib-boite ib-equipe">
+              <div className="ib-entete">Actuellement équipé</div>
+              <ContenuInfobulle o={p} etat={etat} portes={[]} compact />
+            </div>
+          ))}
         </div>
       )}
     </Contexte.Provider>
@@ -125,12 +134,27 @@ export function NomObjet({ objet, className }: { objet: Objet; className?: strin
   );
 }
 
-/** Pièce portée à laquelle comparer (la plus faible pour les bagues et les bijoux), si ce n'est pas la même. */
+/** Emplacements portés que remplacerait l'objet (une arme à deux mains remplace aussi la main gauche). */
+const GROUPES: Partial<Record<Objet['emplacement'], Objet['emplacement'][]>> = {
+  arme2m: ['arme2m', 'arme1m', 'maing'], arme1m: ['arme2m', 'arme1m'], maing: ['maing', 'arme2m'],
+};
+
+/**
+ * Pièces portées à montrer à côté de l'objet survolé, la plus faible d'abord
+ * (deux pour les bagues et les bijoux). Rien si l'objet est déjà porté.
+ */
+function piecesPortees(o: Objet, portes: Objet[], etat: Etat): Objet[] {
+  if (portes.some((p) => p.id === o.id)) return [];
+  const groupe = GROUPES[o.emplacement] ?? [o.emplacement];
+  return portes
+    .filter((p) => groupe.includes(p.emplacement))
+    .sort((a, b) => valeur(a, etat.role) - valeur(b, etat.role))
+    .slice(0, 2);
+}
+
+/** Pièce portée à laquelle comparer : la plus faible du même emplacement. */
 function pieceComparee(o: Objet, portes: Objet[], etat: Etat): Objet | null {
-  if (portes.some((p) => p.id === o.id)) return null;
-  const groupe = o.emplacement === 'arme2m' || o.emplacement === 'arme1m' ? ['arme2m', 'arme1m'] : [o.emplacement];
-  const ici = portes.filter((p) => groupe.includes(p.emplacement)).sort((a, b) => valeur(a, etat.role) - valeur(b, etat.role));
-  return ici[0] ?? null;
+  return piecesPortees(o, portes, etat)[0] ?? null;
 }
 
 function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat }) {
@@ -154,14 +178,15 @@ function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat
       </div>
       {gain !== null && (
         <div className={gain > 0 ? 'ib-vert' : 'ib-rouge'}>
-          {gain > 0 ? '▲' : '▼'} {gain > 0 ? '+' : ''}{nombre(gain * 100)} % de valeur pour {etat.role === 'chat' ? 'le félin' : 'l’ours'}
+          {gain > 0 ? '▲' : '▼'} {gain > 0 ? '+' : ''}{nombre(gain * 100)} % de valeur en {SPECIALISATIONS[etat.role].toLowerCase()}
         </div>
       )}
     </>
   );
 }
 
-function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: Objet[] }) {
+/** Contenu d'une bulle. `compact` : bulle « Actuellement équipé », sans provenance ni nom anglais. */
+function ContenuInfobulle({ o, etat, portes, compact }: { o: Objet; etat: Etat; portes: Objet[]; compact?: boolean }) {
   const niveau = etat.niveau;
   const compare = pieceComparee(o, portes, etat);
   const type = o.arme ? ARMES[o.arme.sous] ?? ''
@@ -197,14 +222,18 @@ function ContenuInfobulle({ o, etat, portes }: { o: Objet; etat: Etat; portes: O
       {o.effets.map((f, i) => (
         <div key={i} className="ib-vert">{f.type === 0 ? 'Utiliser : ' : f.type === 2 ? 'Chances quand vous touchez : ' : 'Équipé : '}{f.texte}</div>
       ))}
-      <div className="ib-sep" />
-      {sourcesVisibles(o, etat).map((s, i) => {
-        const t = texteSource(s);
-        return <div key={i}><span className="ib-src">{t.lieu}</span>{t.detail && <span className="ib-det"> · {t.detail}</span>}</div>;
-      })}
-      {portes.some((p) => p.id === o.id) && <div className="ib-vert">✓ Tu portes cet objet</div>}
-      {compare && <Comparaison o={o} piece={compare} etat={etat} />}
-      <div className="ib-gris">{o.nomEn && o.nomEn !== o.nom ? `VO : ${o.nomEn} · ` : ''}objet {o.id}</div>
+      {!compact && (
+        <>
+          <div className="ib-sep" />
+          {sourcesVisibles(o, etat).map((s, i) => {
+            const t = texteSource(s);
+            return <div key={i}><span className="ib-src">{t.lieu}</span>{t.detail && <span className="ib-det"> · {t.detail}</span>}</div>;
+          })}
+          {portes.some((p) => p.id === o.id) && <div className="ib-vert">✓ Tu portes cet objet</div>}
+          {compare && <Comparaison o={o} piece={compare} etat={etat} />}
+          <div className="ib-gris">{o.nomEn && o.nomEn !== o.nom ? `VO : ${o.nomEn} · ` : ''}objet {o.id}</div>
+        </>
+      )}
     </>
   );
 }

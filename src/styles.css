@@ -175,7 +175,16 @@ input[type="search"], select { width: 100%; background: var(--bg); border: 1px s
 .plus { margin-top: 12px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 16px; cursor: pointer; }
 
 /* Infobulle façon jeu */
-.infobulle { position: fixed; z-index: 50; left: 0; top: 0; width: max-content; max-width: min(340px, calc(100vw - 24px)); padding: 9px 11px 10px; background: var(--tip-bg); border: 1px solid var(--tip-line); border-radius: 5px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.55); color: #fff; font: 14px/1.38 var(--font-b); pointer-events: none; }
+/* Conteneur : la bulle de l'objet, puis celles des pièces portées à sa droite (en dessous sur petit écran). */
+.infobulle { position: fixed; z-index: 50; left: 0; top: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; width: max-content; max-width: calc(100vw - 16px); pointer-events: none; }
+.ib-boite { width: max-content; max-width: min(340px, calc(100vw - 24px)); padding: 9px 11px 10px; background: var(--tip-bg); border: 1px solid var(--tip-line); border-radius: 5px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.55); color: #fff; font: 14px/1.38 var(--font-b); }
+.ib-equipe { opacity: 0.96; }
+.ib-entete { color: var(--tip-grey); font-size: 12.5px; margin-bottom: 2px; }
+/* Écran étroit : bulles des pièces portées plus petites, deux par ligne sous la bulle de l'objet. */
+@media (max-width: 900px) {
+  .ib-equipe { max-width: calc(50vw - 14px); font-size: 12.5px; padding: 7px 9px 8px; }
+  .ib-equipe .ib-titre { font-size: 13.5px; }
+}
 .ib-titre { font-size: 15.5px; font-weight: 500; margin-bottom: 1px; }
 .ib-lr { display: flex; justify-content: space-between; gap: 20px; }
 .ib-vert { color: var(--tip-green); }
