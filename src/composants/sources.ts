@@ -11,7 +11,7 @@ export function texteSource(s: Source): { lieu: string; detail?: string } {
     case 'monde':
       return { lieu: 'Butin du monde', detail: 'à guetter à l’hôtel des ventes' };
     case 'inconnue':
-      return { lieu: 'Provenance pas encore révélée', detail: 'déjà trouvé en jeu' };
+      return { lieu: 'Provenance pas encore révélée sur wowf.io', detail: 'clique sur le nom : Wowhead la donne souvent' };
     case 'metier':
       return { lieu: s.lieu, detail: s.detail };
     default:

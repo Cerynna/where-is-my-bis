@@ -42,6 +42,24 @@ export function provenanceCourte(o: Objet, etat: Etat): string {
   return `${t.lieu}${t.detail && s.type !== 'monde' && s.type !== 'inconnue' ? ` · ${t.detail}` : ''}${o.sources.length > 1 ? ` (+${o.sources.length - 1})` : ''}`;
 }
 
+/**
+ * Provenance affichée sous le nom. Quand wowf.io ne l'a pas encore révélée, on renvoie vers la fiche
+ * Wowhead, qui la donne souvent (elle n'est lisible qu'en ouvrant la page dans un navigateur).
+ */
+export function Provenance({ o, etat, className }: { o: Objet; etat: Etat; className: string }) {
+  const s = sourcesVisibles(o, etat)[0];
+  if (s?.type === 'inconnue') {
+    return (
+      <span className={className}>
+        <a className="lien-provenance" href={`https://www.wowhead.com/forever/fr/item=${o.id}`} target="_blank" rel="noopener noreferrer">
+          Provenance sur Wowhead ↗
+        </a>
+      </span>
+    );
+  }
+  return <span className={className}>{provenanceCourte(o, etat)}</span>;
+}
+
 function TexteStatut({ s }: { s: Statut | undefined }) {
   if (!s || s.type === 'aucun') return null;
   if (s.type === 'porte') return <div className="statut porte">✓ Tu le portes</div>;
@@ -69,7 +87,7 @@ function Carte({ libelle, objet, droite, etat, statut }: { libelle: string; obje
       <div>
         <div className="case-lib">{libelle}</div>
         <div className="case-nom"><NomObjet objet={objet} /></div>
-        <div className="case-src">{provenanceCourte(objet, etat)}</div>
+        <div><Provenance o={objet} etat={etat} className="case-src" /></div>
         <TexteStatut s={statut} />
       </div>
     </Survol>
@@ -204,7 +222,7 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
         <span className="ligne-milieu">
           <NomObjet objet={o} className="ligne-nom" />
           <span className="ligne-stats">{resume(o)}</span>
-          <span className="ligne-src">{provenanceCourte(o, etat)}</span>
+          <Provenance o={o} etat={etat} className="ligne-src" />
         </span>
       </Survol>
       <span className="ligne-droite">

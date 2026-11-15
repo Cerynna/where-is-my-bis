@@ -1,0 +1,3 @@
+{
+  "_lisez-moi": "Provenances ajoutées à la main (par exemple lues sur Wowhead) pour les objets que wowf.io n'a pas encore révélés. Clé = numéro de l'objet. type : donjon, raid, quete, metier, rep, jcj, vendeur, monde, autre. Ces lignes remplacent « Provenance pas encore révélée » à la prochaine génération (npm run donnees:construire)."
+}

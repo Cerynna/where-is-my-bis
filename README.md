@@ -52,6 +52,16 @@ L'étape 5 écarte :
 - les bâtons de lanceur de sorts dont les dégâts ne sont pas confirmés ;
 - les **butins du monde bleus et violets**, trop rares pour compter dessus. Les verts restent : ils se trouvent à l'hôtel des ventes.
 
+**Provenances manquantes.** wowf.io ne révèle pas toutes les provenances (« Provenance pas encore révélée »). Wowhead les a souvent, mais seulement dans la page affichée par un navigateur : ses données ne sont pas lisibles par un script, et sa protection anti-robots n'est pas contournée ici. Le site renvoie donc ces objets vers leur fiche Wowhead.
+
+Pour corriger durablement un objet, ajoute sa provenance dans `donnees/provenances.json` :
+
+```json
+{ "287010": [{ "type": "donjon", "lieu": "Bastion Krol’dok", "detail": "Suzerain Mugg" }] }
+```
+
+Lance ensuite `npm run donnees:construire`.
+
 Après une mise à jour du jeu, relancer `npm run donnees` (les fiches déjà téléchargées ne sont pas reprises). Pour tout reprendre de zéro, supprimer `.cache/`.
 
 ## Valeur d'un objet

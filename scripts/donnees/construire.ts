@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Donnees, Objet, Source, Stat } from '../../src/types.ts';
-import { CACHE, PUBLIC, attendre, ecrireJson, estPrincipal, lireJson, telecharger } from './commun.ts';
+import { CACHE, PUBLIC, RACINE, attendre, ecrireJson, estPrincipal, lireJson, telecharger } from './commun.ts';
 import type { Candidat } from './objets.ts';
 import { lireDonjons, niveauxDonjons, nomDonjon } from './donjons.ts';
 import { lireFiche } from './wowf.ts';
@@ -49,6 +49,11 @@ export function construire(build: string): Bilan {
   if (fs.existsSync(plan)) for (const m of fs.readFileSync(plan, 'utf8').matchAll(/\/items\/(\d+)</g)) connus.add(Number(m[1]));
   const donjons = lireDonjons();
   const niveauxDonjon = niveauxDonjons();
+  const fichierCorrections = path.join(RACINE, 'donnees', 'provenances.json');
+  const corrections = fs.existsSync(fichierCorrections)
+    ? (lireJson<Record<string, Source[] | string>>(fichierCorrections) as Record<string, Source[] | undefined>)
+    : {};
+  for (const k of Object.keys(corrections)) if (!Array.isArray(corrections[k])) delete corrections[k];
   const ecartes: Record<string, number> = {};
   const ecarter = (raison: string) => { ecartes[raison] = (ecartes[raison] ?? 0) + 1; };
   const objets: Objet[] = [];
@@ -69,6 +74,9 @@ export function construire(build: string): Bilan {
       ecarter('fiche pas encore téléchargée'); continue;
     } else if (c.revele && c.liaison === 2) sources = [{ type: 'monde', lieu: 'Butin aléatoire' }];
     else { ecarter(c.revele ? 'provenance introuvable' : 'jamais vu en jeu'); continue; }
+    // Provenances ajoutées à la main (donnees/provenances.json) : elles remplacent « pas encore révélée ».
+    const ajout = corrections[String(c.id)];
+    if (ajout?.length) sources = [...sources.filter((s) => s.type !== 'inconnue'), ...ajout];
     // Un butin de donjon n'est pas un butin du monde, même si la fiche le dit aussi.
     if (sources.some((s) => s.type === 'donjon')) sources = sources.filter((s) => s.type !== 'monde');
     if (!sources.length) { ecarter('provenance introuvable'); continue; }
