@@ -84,7 +84,9 @@ function ContenuClasse({ classe, vue }: { classe: Classe; vue: Vue }) {
   return (
     <ContexteClasse.Provider value={{ classe, spe }}>
       <FournisseurInfobulle etat={etat} portes={portes}>
-        <div className="bandeau-classe" style={{ '--classe': classe.couleur } as CSSProperties}>
+        {/* Toute la page prend la couleur de la classe comme accent (voir .theme-classe). */}
+        <div className="theme-classe" style={{ '--classe': classe.couleur } as CSSProperties}>
+        <div className="bandeau-classe">
           <div className="bandeau-int">
             <div className="bandeau-titre">
               <img src={cheminPublic(`icons/classes/${classe.icone}.jpg`)} alt="" width={40} height={40} />
@@ -120,6 +122,7 @@ function ContenuClasse({ classe, vue }: { classe: Classe; vue: Vue }) {
               </p>
             )}
           </main>
+        </div>
         </div>
       </FournisseurInfobulle>
     </ContexteClasse.Provider>

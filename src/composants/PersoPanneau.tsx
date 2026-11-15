@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type CSSProperties, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { importerPerso } from '../armurerie.ts';
 import { classeParEnum } from '../classes/index.ts';
@@ -47,7 +47,7 @@ export function PersoPanneau({ perso, classe, surImport, surOubli }: Props) {
       <h2 id="h-perso">Ton personnage</h2>
       {perso ? (
         <>
-          <p className="perso-nom">{perso.nom}</p>
+          <p className="perso-nom" style={saClasse ? ({ '--perso': saClasse.couleur } as CSSProperties) : undefined}>{perso.nom}</p>
           <p className="perso-infos">
             Niveau {perso.niveau} · {perso.classe}{perso.specialisation ? ` (${perso.specialisation})` : ''}
             {perso.faction ? ` · ${perso.faction}` : ''}{perso.maroquinier ? ' · travail du cuir' : ''}
@@ -65,7 +65,7 @@ export function PersoPanneau({ perso, classe, surImport, surOubli }: Props) {
             {perso.majArmurerie ? ` · armurerie mise à jour ${depuis(perso.majArmurerie)}` : ''}
           </p>
           <div className="perso-actions">
-            <button type="button" onClick={() => void importer(perso.lien)} disabled={charge}>{charge ? 'Actualisation…' : 'Actualiser'}</button>
+            <button type="button" className="bouton" onClick={() => void importer(perso.lien)} disabled={charge}>{charge ? 'Actualisation…' : 'Actualiser'}</button>
             <button type="button" className="lien" onClick={surOubli}>Oublier ce personnage</button>
           </div>
         </>
@@ -74,7 +74,7 @@ export function PersoPanneau({ perso, classe, surImport, surOubli }: Props) {
           <label htmlFor="lien-armurerie">Colle le lien de ton personnage sur l’armurerie WoW Forever pour comparer avec ce que tu portes.</label>
           <input id="lien-armurerie" type="url" inputMode="url" placeholder="https://worldofwarcraft.blizzard.com/fr-fr/forever/eu/armory/character/…"
             value={lien} onChange={(e) => setLien(e.target.value)} required />
-          <button type="submit" disabled={charge || !lien.trim()}>{charge ? 'Import…' : 'Importer'}</button>
+          <button type="submit" className="bouton" disabled={charge || !lien.trim()}>{charge ? 'Import…' : 'Importer'}</button>
         </form>
       )}
       {erreur && <p className="perso-erreur" role="alert">{erreur}</p>}
