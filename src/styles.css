@@ -201,7 +201,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .icone-spe { flex: none; border: 1px solid var(--line-2); border-radius: 2px; vertical-align: middle; background: #000; }
 .spe-mini { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; white-space: nowrap; }
 .spe-mini:last-child { margin-right: 0; }
-.bandeau-spe { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; color: var(--muted); font-size: 0.95rem; }
 .poids-classe dt .icone-spe { margin-right: 4px; position: relative; top: -1px; }
 /* Cases à cocher (provenances, qualités, matières) : une liste simple, la couleur sur le libellé */
 .puces { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 10px; }
