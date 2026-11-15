@@ -37,14 +37,14 @@ export interface Etat {
 /** Réglages par défaut d'une classe. */
 export function defaut(classe: Classe): Etat {
   return {
-    niveau: 60,
+    niveau: 30,
     role: classe.specs[0]?.id ?? '',
     faction: 'toutes',
     maroquinier: false,
     matieres: classe.armures.map((a) => a.matiere),
-    // Décochées : « Source inconnue » (provenance pas révélée, on ne sait pas où les trouver)
-    // et « Butin du monde » (objets aléatoires, impossibles à aller chercher).
-    sources: ORDRE_SOURCES.filter((s) => s !== 'autre' && s !== 'inconnue' && s !== 'monde'),
+    // Décochées : « Source inconnue » (provenance pas révélée, on ne sait pas où les trouver),
+    // « Butin du monde » (objets aléatoires, impossibles à aller chercher) et « JcJ » (rangs d'honneur).
+    sources: ORDRE_SOURCES.filter((s) => s !== 'autre' && s !== 'inconnue' && s !== 'monde' && s !== 'jcj'),
     qualites: [2, 3, 4, 5],
     hvSeulement: false,
     emplacement: 'tous',
@@ -63,9 +63,9 @@ const PREFIXE = 'forever-equipement';
 const cle = (classe: Classe) => `${PREFIXE}:etat:${classe.id}`;
 /**
  * Version des réglages gardés : la 2 ajoute la provenance « Monstre », cochée d'office une fois ;
- * la 3 décoche une fois « Source inconnue », la 4 « Butin du monde » (décochées par défaut depuis).
+ * la 3 décoche une fois « Source inconnue », la 4 « Butin du monde », la 5 « JcJ » (décochées par défaut depuis).
  */
-const VERSION = 4;
+const VERSION = 5;
 
 function borner(n: number, min: number, max: number): number {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : min;
@@ -121,6 +121,7 @@ export function lireEtat(classe: Classe, p: URLSearchParams): Etat {
       if (version < 2 && !local.sources.includes('monstre')) local.sources = [...local.sources, 'monstre'];
       if (version < 3) local.sources = local.sources.filter((s) => s !== 'inconnue');
       if (version < 4) local.sources = local.sources.filter((s) => s !== 'monde');
+      if (version < 5) local.sources = local.sources.filter((s) => s !== 'jcj');
     }
     localStorage.setItem(`${cle(classe)}:version`, String(VERSION));
   } catch { /* stockage indisponible */ }

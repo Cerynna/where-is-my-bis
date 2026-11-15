@@ -43,7 +43,7 @@ Les deux vues d'une classe :
 - Les mailles (chasseur, chaman) et les plaques (guerrier, paladin) ne sont proposées qu'à partir du niveau 40.
 - **Base d'objets** : tous les objets, avec recherche et filtres. Les filtres portent sur le niveau, la spécialisation, la faction, la provenance, le taux de butin, la matière, la qualité, l'hôtel des ventes, l'emplacement, le donjon ou la zone, les stats et le tri.
 
-Les réglages sont gardés dans l'adresse, ce qui permet de partager un lien, et dans le navigateur (une mémoire par classe).
+Les réglages sont gardés dans l'adresse, ce qui permet de partager un lien, et dans le navigateur (une mémoire par classe). Par défaut : niveau 30, provenances « Butin du monde », « JcJ » et « Source inconnue » décochées.
 
 Chaque nom d'objet ouvre sa fiche Wowhead (WoW Forever, en français) dans un nouvel onglet.
 
