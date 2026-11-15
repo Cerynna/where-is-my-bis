@@ -145,6 +145,7 @@ export async function importerPerso(lien: string): Promise<Perso> {
     nom: c.surname ? `${c.name} ${c.surname}` : c.name,
     niveau: c.level,
     classe: c.class?.name ?? '?',
+    classeEnum: c.class?.enum,
     estDruide: c.class?.enum === 'DRUID',
     faction,
     specialisation: c.specs?.find((s) => s.active)?.name,

@@ -1,31 +1,35 @@
 import { useMemo } from 'react';
 import type { Etat } from '../etat.ts';
-import { BILAN, COURT, SPECIALISATIONS, nombre } from '../libelles.ts';
+import { COURT, EMPLACEMENTS, nombre } from '../libelles.ts';
 import type { Emplacement, Objet, Perso, Stat } from '../types.ts';
 import {
-  LIBELLES_ROLE, comparer, meilleurEnsemble, passeCommun, sourcesVisibles, valeur, valeurPortee,
+  comparer, meilleurEnsemble, passeCommun, sourcesVisibles, valeur, valeurPortee,
   type Case, type Ensemble as TEnsemble, type Statut,
 } from '../valeur.ts';
+import { useClasse } from './contexteClasse.tsx';
 import { Icone } from './Icone.tsx';
 import { NomObjet, Survol } from './Infobulle.tsx';
 import { texteSource } from './sources.ts';
 
-const GAUCHE: [Case, string][] = [['tete', 'Tête'], ['cou', 'Cou'], ['epaules', 'Épaules'], ['dos', 'Dos'], ['torse', 'Torse'], ['poignets', 'Poignets'], ['relique', 'Idole']];
 const DROITE: [Case, string][] = [['mains', 'Mains'], ['taille', 'Taille'], ['jambes', 'Jambes'], ['pieds', 'Pieds'], ['doigt1', 'Doigt'], ['doigt2', 'Doigt'], ['bijou1', 'Bijou'], ['bijou2', 'Bijou']];
-const DETAIL: [Emplacement[], string, Case[]][] = [
-  [['tete'], 'Tête', ['tete']], [['cou'], 'Cou', ['cou']], [['epaules'], 'Épaules', ['epaules']], [['dos'], 'Dos', ['dos']],
-  [['torse'], 'Torse', ['torse']], [['poignets'], 'Poignets', ['poignets']], [['mains'], 'Mains', ['mains']],
-  [['taille'], 'Taille', ['taille']], [['jambes'], 'Jambes', ['jambes']], [['pieds'], 'Pieds', ['pieds']],
-  [['doigt'], 'Doigts', ['doigt1', 'doigt2']], [['bijou'], 'Bijoux', ['bijou1', 'bijou2']],
-  [['arme2m', 'arme1m'], 'Arme', ['arme']], [['maing'], 'Main gauche', ['maing']], [['relique'], 'Idole', ['relique']],
-];
 
-const NOTES: Record<Etat['role'], string> = {
-  chat: '',
-  ours: 'En ours, la forme multiplie l’armure : vise l’Endurance et l’armure.',
-  equilibre: 'Colère profite des dégâts de Nature, Feu stellaire et Éclat lunaire de ceux des Arcanes ; la puissance des sorts sert aux deux.',
-  resto: 'Les soins et la puissance des sorts comptent autant ; le mana toutes les 5 s et l’Intelligence font tenir les longs combats.',
-};
+/** Colonne de gauche de la fiche ; la relique n'y figure que si la classe en a une. */
+function gauche(nomRelique?: string): [Case, string][] {
+  const c: [Case, string][] = [['tete', 'Tête'], ['cou', 'Cou'], ['epaules', 'Épaules'], ['dos', 'Dos'], ['torse', 'Torse'], ['poignets', 'Poignets']];
+  return nomRelique ? [...c, ['relique', nomRelique]] : c;
+}
+
+/** Blocs « emplacement par emplacement ». */
+function details(nomRelique?: string): [Emplacement[], string, Case[]][] {
+  const d: [Emplacement[], string, Case[]][] = [
+    [['tete'], 'Tête', ['tete']], [['cou'], 'Cou', ['cou']], [['epaules'], 'Épaules', ['epaules']], [['dos'], 'Dos', ['dos']],
+    [['torse'], 'Torse', ['torse']], [['poignets'], 'Poignets', ['poignets']], [['mains'], 'Mains', ['mains']],
+    [['taille'], 'Taille', ['taille']], [['jambes'], 'Jambes', ['jambes']], [['pieds'], 'Pieds', ['pieds']],
+    [['doigt'], 'Doigts', ['doigt1', 'doigt2']], [['bijou'], 'Bijoux', ['bijou1', 'bijou2']],
+    [['arme2m', 'arme1m'], 'Arme', ['arme']], [['maing', 'bouclier'], 'Main gauche', ['maing']],
+  ];
+  return nomRelique ? [...d, [['relique'], nomRelique, ['relique']]] : d;
+}
 
 export function resume(o: Objet): string {
   const p: string[] = [];
@@ -105,14 +109,15 @@ function totaux(objets: (Objet | null | undefined)[]) {
   return { t, armure };
 }
 
-function Bilan({ ens, etat, portes }: { ens: TEnsemble; etat: Etat; portes: Objet[] }) {
+function Bilan({ ens, portes }: { ens: TEnsemble; portes: Objet[] }) {
+  const { spe } = useClasse();
   const { t, armure } = totaux(Object.values(ens));
   const avant = portes.length ? totaux(portes) : null;
-  const lignes = BILAN[etat.role];
-  const physique = etat.role === 'chat' || etat.role === 'ours';
+  const lignes = spe.bilan;
+  const physique = spe.physique;
   const armePortee = portes.find((o) => o.arme);
-  const vAvant = portes.reduce((s, o) => s + valeur(o, etat.role), 0);
-  const vApres = Object.values(ens).reduce((s, o) => s + (o ? valeur(o, etat.role) : 0), 0);
+  const vAvant = portes.reduce((s, o) => s + valeur(o, spe), 0);
+  const vApres = Object.values(ens).reduce((s, o) => s + (o ? valeur(o, spe) : 0), 0);
   const pa = (t.for ?? 0) * 2 + (t.pa ?? 0) + (ens.arme?.arme ? Math.round(ens.arme.arme.dps * 14) : 0);
   const cellule = (a: number | undefined, b: number | undefined, dec = 0) => (
     <dd>
@@ -129,16 +134,17 @@ function Bilan({ ens, etat, portes }: { ens: TEnsemble; etat: Etat; portes: Obje
         {physique && ens.arme?.arme && <div><dt>DPS de l’arme</dt>{cellule(armePortee?.arme?.dps, ens.arme.arme.dps, 1)}</div>}
       </dl>
       <p className="note">
-        {avant && vAvant > 0 ? `Valeur estimée en ${SPECIALISATIONS[etat.role].toLowerCase()} : +${nombre(Math.max(0, (vApres - vAvant) / vAvant) * 100)} % en suivant l’ensemble conseillé. ` : ''}
-        {etat.role === 'chat' ? `En félin, la Force et l’arme valent environ ${nombre(pa)} PA, sans compter l’Agilité.` : NOTES[etat.role]}
+        {avant && vAvant > 0 ? `Valeur estimée en ${spe.nom.toLowerCase()} : +${nombre(Math.max(0, (vApres - vAvant) / vAvant) * 100)} % en suivant l’ensemble conseillé. ` : ''}
+        {spe.id === 'chat' ? `En félin, la Force et l’arme valent environ ${nombre(pa)} PA, sans compter l’Agilité.` : spe.note}
       </p>
     </div>
   );
 }
 
 export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; etat: Etat; perso: Perso | null; portes: Objet[] }) {
-  const ens = useMemo(() => meilleurEnsemble(objets, etat, portes), [objets, etat, portes]);
-  const statuts = useMemo(() => comparer(ens, perso, portes, etat.role), [ens, perso, portes, etat.role]);
+  const { classe, spe } = useClasse();
+  const ens = useMemo(() => meilleurEnsemble(objets, etat, spe, portes), [objets, etat, spe, portes]);
+  const statuts = useMemo(() => comparer(ens, perso, portes, spe), [ens, perso, portes, spe]);
   const choisis = new Set(Object.values(ens).filter(Boolean).map((o) => o!.id));
   const nbChangements = Object.values(statuts).filter((s) => s?.type === 'mieux').length;
 
@@ -150,13 +156,13 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
           {perso
             ? `Comparé à ce que porte ${perso.nom} : ${nbChangements ? `${nbChangements} pièce${nbChangements > 1 ? 's' : ''} à changer` : 'rien de mieux à trouver pour l’instant'}. `
             : 'Le meilleur objet de chaque emplacement'}
-          {perso ? '' : ` pour un druide ${LIBELLES_ROLE[etat.role]}${etat.faction !== 'toutes' ? `, ${etat.faction}` : ''}. `}
+          {perso ? '' : ` pour un ${classe.nom.toLowerCase()} ${spe.libelle}${etat.faction !== 'toutes' ? `, ${etat.faction}` : ''}. `}
           Survole un objet pour voir son infobulle ; son nom ouvre sa fiche Wowhead.
         </p>
         <div className="fiche">
-          <div className="colonne">{GAUCHE.map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} etat={etat} statut={statuts[c]} />)}</div>
+          <div className="colonne">{gauche(classe.relique?.nom).map(([c, l]) => <Carte key={c} libelle={l} objet={ens[c]} etat={etat} statut={statuts[c]} />)}</div>
           <div className="centre">
-            <Bilan ens={ens} etat={etat} portes={portes} />
+            <Bilan ens={ens} portes={portes} />
             <Carte libelle={ens.maing ? 'Arme à une main' : 'Arme'} objet={ens.arme} etat={etat} statut={statuts.arme} />
             {ens.maing && <Carte libelle="Main gauche" objet={ens.maing} etat={etat} statut={statuts.maing} />}
           </div>
@@ -168,9 +174,9 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
         <h2 id="h-detail">Emplacement par emplacement</h2>
         <p className="sous-titre">Les meilleurs choix à ton niveau, puis la prochaine amélioration dans les dix niveaux qui viennent.</p>
         <div className="blocs">
-          {DETAIL.map(([emps, titre, cases]) => (
+          {details(classe.relique?.nom).map(([emps, titre, cases]) => (
             <BlocEmplacement key={titre} titre={titre} emps={emps} objets={objets} etat={etat} choisis={choisis} portes={portes}
-              actuel={Math.min(...cases.map((c) => (ens[c] ? valeur(ens[c]!, etat.role) : 0)))} />
+              actuel={Math.min(...cases.map((c) => (ens[c] ? valeur(ens[c]!, spe) : 0)))} />
           ))}
         </div>
       </section>
@@ -181,15 +187,16 @@ export function Ensemble({ objets, etat, perso, portes }: { objets: Objet[]; eta
 function BlocEmplacement({ titre, emps, objets, etat, choisis, actuel, portes }: {
   titre: string; emps: Emplacement[]; objets: Objet[]; etat: Etat; choisis: Set<number>; actuel: number; portes: Objet[];
 }) {
+  const { spe } = useClasse();
   const { maintenant, ensuite } = useMemo(() => {
     const ici = objets.filter((o) => emps.includes(o.emplacement) && passeCommun(o, etat));
-    const tri = (a: Objet, b: Objet) => valeur(b, etat.role) - valeur(a, etat.role);
+    const tri = (a: Objet, b: Objet) => valeur(b, spe) - valeur(a, spe);
     const maintenant = ici.filter((o) => o.niveau <= etat.niveau).sort(tri).slice(0, 5);
     const ensuite = ici
-      .filter((o) => o.niveau > etat.niveau && o.niveau <= etat.niveau + 10 && valeur(o, etat.role) > actuel)
+      .filter((o) => o.niveau > etat.niveau && o.niveau <= etat.niveau + 10 && valeur(o, spe) > actuel)
       .sort((a, b) => a.niveau - b.niveau || tri(a, b))[0];
     return { maintenant, ensuite };
-  }, [objets, emps, etat, actuel]);
+  }, [objets, emps, etat, spe, actuel]);
   const portesIci = portes.filter((o) => emps.includes(o.emplacement));
   if (!maintenant.length && !ensuite && !portesIci.length) return null;
   return (
@@ -210,11 +217,12 @@ function BlocEmplacement({ titre, emps, objets, etat, choisis, actuel, portes }:
 }
 
 export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; choisi: boolean; etat: Etat; portes: Objet[]; avecEmplacement?: boolean }) {
+  const { classe, spe } = useClasse();
   const trop = o.niveau > etat.niveau;
   const premiere = sourcesVisibles(o, etat)[0];
   const porte = portes.some((p) => p.id === o.id);
-  const ref = valeurPortee(portes, o.emplacement, etat.role);
-  const mieux = !porte && ref !== null && valeur(o, etat.role) > ref;
+  const ref = valeurPortee(portes, o.emplacement, spe);
+  const mieux = !porte && ref !== null && valeur(o, spe) > ref;
   return (
     <li className={`ligne${choisi ? ' choisi' : ''}${trop ? ' trop' : ''}${porte ? ' porte' : ''}`}>
       <Survol objet={o} className="ligne-objet">
@@ -229,7 +237,7 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
         {porte && <span className="badge porte">Porté</span>}
         {!porte && choisi && <span className="badge">Choisi</span>}
         {mieux && !trop && <span className="badge mieux">▲ Mieux que le tien</span>}
-        {avecEmplacement && <span className="ligne-emp">{o.emplacement === 'arme2m' ? 'Deux mains' : o.emplacement === 'arme1m' ? 'Une main' : libelleCourt(o.emplacement)} · iLvl {o.ilvl}</span>}
+        {avecEmplacement && <span className="ligne-emp">{libelleCourt(o.emplacement, classe.relique?.nom)} · iLvl {o.ilvl}</span>}
         <span className="ligne-niv">niv. {o.niveau}{trop ? ' requis' : ''}</span>
         <span className={`pastille src-${premiere?.type ?? 'autre'}`}>
           {o.maroquinier ? 'Maroquinier' : porte && premiere?.type === 'autre' ? 'Porté' : labelSource(premiere?.type)}
@@ -239,8 +247,11 @@ export function Ligne({ o, choisi, etat, portes, avecEmplacement }: { o: Objet; 
   );
 }
 
-function libelleCourt(e: Emplacement): string {
-  return { tete: 'Tête', cou: 'Cou', epaules: 'Épaules', dos: 'Dos', torse: 'Torse', poignets: 'Poignets', mains: 'Mains', taille: 'Taille', jambes: 'Jambes', pieds: 'Pieds', doigt: 'Doigt', bijou: 'Bijou', arme2m: 'Deux mains', arme1m: 'Une main', maing: 'Main gauche', relique: 'Idole' }[e];
+function libelleCourt(e: Emplacement, nomRelique?: string): string {
+  if (e === 'arme2m') return 'Deux mains';
+  if (e === 'arme1m') return 'Une main';
+  if (e === 'relique') return nomRelique ?? EMPLACEMENTS[e];
+  return EMPLACEMENTS[e];
 }
 
 function labelSource(type: Objet['sources'][number]['type'] | undefined): string {

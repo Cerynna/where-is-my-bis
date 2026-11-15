@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 import { importerPerso } from '../armurerie.ts';
+import { classeParEnum } from '../classes/index.ts';
+import type { Classe } from '../classes/types.ts';
 import type { Perso } from '../types.ts';
 
 interface Props {
   perso: Perso | null;
+  /** Classe de la page (absente sur l'accueil). */
+  classe?: Classe;
   surImport: (p: Perso) => void;
   surOubli: () => void;
 }
@@ -17,7 +22,9 @@ function depuis(iso: string): string {
   return `le ${new Date(iso).toLocaleDateString('fr-FR')}`;
 }
 
-export function PersoPanneau({ perso, surImport, surOubli }: Props) {
+export function PersoPanneau({ perso, classe, surImport, surOubli }: Props) {
+  const saClasse = classeParEnum(perso?.classeEnum);
+  const autreClasse = !!(classe && perso?.classeEnum && perso.classeEnum !== classe.enumArmurerie);
   const [lien, setLien] = useState(perso?.lien ?? '');
   const [charge, setCharge] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -45,7 +52,14 @@ export function PersoPanneau({ perso, surImport, surOubli }: Props) {
             Niveau {perso.niveau} · {perso.classe}{perso.specialisation ? ` (${perso.specialisation})` : ''}
             {perso.faction ? ` · ${perso.faction}` : ''}{perso.maroquinier ? ' · travail du cuir' : ''}
           </p>
-          {!perso.estDruide && <p className="perso-alerte">Ce personnage n’est pas druide : les conseils restent ceux d’un druide farouche.</p>}
+          {autreClasse && (
+            <p className="perso-alerte">
+              Ce personnage est {perso.classe.toLowerCase()} : il n’est pas comparé à l’équipement de cette page.
+              {saClasse?.actif ? <> <Link to={`/${saClasse.id}`}>Voir la page {saClasse.nom}</Link>.</> : ' Sa classe arrive bientôt.'}
+            </p>
+          )}
+          {!classe && saClasse && !saClasse.actif && <p className="perso-alerte">La classe {saClasse.nom.toLowerCase()} arrive bientôt sur le site.</p>}
+          {!classe && saClasse?.actif && <p><Link to={`/${saClasse.id}`}>Ouvrir la page {saClasse.nom}</Link></p>}
           <p className="perso-date">
             Importé {depuis(perso.importeLe)}
             {perso.majArmurerie ? ` · armurerie mise à jour ${depuis(perso.majArmurerie)}` : ''}

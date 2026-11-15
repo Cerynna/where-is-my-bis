@@ -1,5 +1,5 @@
-// Assemble public/data/objets.json : candidats du jeu + provenance wowf.io,
-// sans les butins du monde improbables ni les objets inutiles à un druide (toutes spécialisations).
+// Assemble public/data/<classe>.json : candidats du jeu + provenances (wowf.io, AzerothCompendium, corrections),
+// sans les butins du monde improbables ni les objets sans stat utile.
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Donnees, Objet, Source, Stat } from '../../src/types.ts';
@@ -8,22 +8,33 @@ import type { Candidat } from './objets.ts';
 import { lireCompendium, sourcesQuetes } from './compendium.ts';
 import { lireDonjons, niveauxDonjons, nomDonjon } from './donjons.ts';
 import { lireFiche } from './wowf.ts';
+import { classeParId, type Classe } from '../../src/classes/index.ts';
 
-// Stats qui servent à au moins une spécialisation du druide (félin, ours, équilibre, restauration).
-const UTILES: Stat[] = [
-  'agi', 'for', 'end', 'pa', 'crit', 'tou', 'hate', 'exp', 'def', 'esq', 'par', 'armure', 'pa_mv', 'pa_hum', 'pa_bete', 'pa_dem',
-  'int', 'esp', 'pds', 'soins', 'dsorts', 'mp5', 'dnature', 'darcane', 'penet',
-];
-const EFFET_UTILE = /attaque|agilité|force|armure|esquive|critique|toucher|dégâts physiques|vitesse d'attaque|vitesse de déplacement|forme|sorts|soins|mana|Colère|Feu stellaire|Éclat lunaire|Toucher guérisseur|Récupération|Rétablissement/i;
+// Mots qui rendent un effet « Équipé : » utile à toutes les classes. Les sorts propres à une classe
+// (Colère, Toucher guérisseur…) viennent des expressions de reliques de ses spécialisations.
+const EFFET_COMMUN = /attaque|agilité|force|armure|esquive|critique|toucher|dégâts physiques|vitesse d'attaque|vitesse de déplacement|forme|sorts|soins|mana/i;
 
 export interface Bilan { gardes: number; ecartes: Record<string, number> }
 
-function utile(c: Candidat): boolean {
-  // Idoles : toutes celles dont l'effet est lisible (les runes de Saison de la découverte n'existent pas sur Forever).
-  if (c.emplacement === 'relique') return c.effets.some((e) => !e.texte.includes('$') && !/^Grave sur/.test(e.texte));
-  if (c.arme) return true;
-  if (UTILES.some((s) => (c.stats[s] ?? 0) > 0)) return true;
-  return c.effets.some((e) => EFFET_UTILE.test(e.texte));
+/**
+ * Objet utile à la classe : une stat qui pèse plus de 0,1 pour au moins une de ses spécialisations
+ * (pour le druide, cela redonne la liste écrite à la main jusqu'ici), une arme, une relique lisible,
+ * ou un effet qui parle de ses sorts.
+ */
+function critereUtile(classe: Classe): (c: Candidat) => boolean {
+  if (!classe.specs.length) throw new Error(`${classe.nom} : décris ses spécialisations dans src/classes/ avant de générer ses données.`);
+  const stats = new Set<Stat>();
+  for (const s of classe.specs) {
+    for (const [k, v] of Object.entries(s.poids)) if (k !== 'dps' && k !== 'armureBase' && (v ?? 0) > 0.1) stats.add(k as Stat);
+  }
+  const effets = [EFFET_COMMUN, ...classe.specs.flatMap((s) => (s.reliques ? [s.reliques] : []))];
+  return (c) => {
+    // Reliques : toutes celles dont l'effet est lisible (les runes de Saison de la découverte n'existent pas sur Forever).
+    if (c.emplacement === 'relique') return c.effets.some((e) => !e.texte.includes('$') && !/^Grave sur/.test(e.texte));
+    if (c.arme) return true;
+    for (const s of stats) if ((c.stats[s] ?? 0) > 0) return true;
+    return c.effets.some((e) => effets.some((r) => r.test(e.texte)));
+  };
 }
 
 /**
@@ -42,8 +53,15 @@ function statsDesEffets(effets: Objet['effets']): Partial<Record<Stat, number>> 
   return s;
 }
 
-export function construire(build: string): Bilan {
-  const candidats = lireJson<Candidat[]>(path.join(CACHE, 'candidats.json'));
+/** Fichier des candidats d'une classe (cache) et fichier de données servi au site. */
+export const fichierCandidats = (classe: string) => path.join(CACHE, `candidats-${classe}.json`);
+export const fichierDonnees = (classe: string) => path.join(PUBLIC, 'data', `${classe}.json`);
+
+export function construire(build: string, classe: string): Bilan {
+  const laClasse = classeParId(classe);
+  if (!laClasse) throw new Error(`Classe inconnue : ${classe}`);
+  const utile = critereUtile(laClasse);
+  const candidats = lireJson<Candidat[]>(fichierCandidats(classe));
   // Objets connus de wowf.io : tant que leur fiche manque, on ne devine pas leur provenance.
   const plan = path.join(CACHE, 'wowf', 'sitemap-en.xml');
   const connus = new Set<number>();
@@ -69,7 +87,7 @@ export function construire(build: string): Bilan {
   const objets: Objet[] = [];
 
   for (const c of candidats) {
-    if (!utile(c)) { ecarter('sans stat utile au druide'); continue; }
+    if (!utile(c)) { ecarter(`sans stat utile (${laClasse.nom.toLowerCase()})`); continue; }
     const fiche = lireFiche(c.id);
     const enDonjon = donjons.get(c.id) ?? [];
     // AzerothCompendium : boss et monstres des donjons et raids, quêtes, marchands.
@@ -164,8 +182,8 @@ export function construire(build: string): Bilan {
   }
 
   objets.sort((a, b) => a.niveau - b.niveau || a.id - b.id);
-  const donnees: Donnees = { build, genere: new Date().toISOString(), objets };
-  ecrireJson(path.join(PUBLIC, 'data', 'objets.json'), donnees);
+  const donnees: Donnees = { classe, build, genere: new Date().toISOString(), objets };
+  ecrireJson(fichierDonnees(classe), donnees);
   return { gardes: objets.length, ecartes };
 }
 
@@ -173,10 +191,10 @@ export function construire(build: string): Bilan {
  * Icônes 56 px copiées dans public/icons : d'abord le CDN d'images de Wowhead (par nom),
  * sinon celui de Blizzard (par numéro de fichier, comme l'armurerie).
  */
-export async function telechargerIcones(): Promise<void> {
-  const d = lireJson<Donnees>(path.join(PUBLIC, 'data', 'objets.json'));
+export async function telechargerIcones(classe: string): Promise<void> {
+  const d = lireJson<Donnees>(fichierDonnees(classe));
   const numeros = new Map<string, number>();
-  for (const c of lireJson<Candidat[]>(path.join(CACHE, 'candidats.json'))) if (c.icone && c.iconeId) numeros.set(c.icone, c.iconeId);
+  for (const c of lireJson<Candidat[]>(fichierCandidats(classe))) if (c.icone && c.iconeId) numeros.set(c.icone, c.iconeId);
   const noms = [...new Set(d.objets.map((o) => o.icone).filter((i): i is string => !!i))];
   const manquantes = noms.filter((n) => !fs.existsSync(path.join(PUBLIC, 'icons', `${n}.jpg`)));
   if (manquantes.length) console.log(`Icônes : ${manquantes.length} à télécharger`);
@@ -198,7 +216,8 @@ export async function telechargerIcones(): Promise<void> {
 
 if (estPrincipal(import.meta.url)) {
   const build = lireJson<{ build: string }>(path.join(CACHE, 'etat.json')).build;
-  const bilan = construire(build);
-  console.log(`${bilan.gardes} objets gardés`, bilan.ecartes);
-  await telechargerIcones();
+  const classe = process.env.CLASSE ?? 'druide';
+  const bilan = construire(build, classe);
+  console.log(`${classe} : ${bilan.gardes} objets gardés`, bilan.ecartes);
+  await telechargerIcones(classe);
 }

@@ -1,10 +1,11 @@
-// Format des données servies au site (public/data/objets.json).
+// Format des données servies au site (public/data/<classe>.json).
 // Partagé entre les scripts qui les génèrent et l'interface qui les lit.
+import type { Matiere } from './classes/equipement.ts';
 
 export type Emplacement =
   | 'tete' | 'cou' | 'epaules' | 'dos' | 'torse' | 'poignets'
   | 'mains' | 'taille' | 'jambes' | 'pieds' | 'doigt' | 'bijou'
-  | 'arme2m' | 'arme1m' | 'maing' | 'relique';
+  | 'arme2m' | 'arme1m' | 'maing' | 'bouclier' | 'relique';
 
 export type Stat =
   | 'agi' | 'for' | 'end' | 'int' | 'esp'
@@ -73,8 +74,8 @@ export interface Objet {
   emplacement: Emplacement;
   /** InventoryType du jeu, pour le libellé exact de l'emplacement. */
   inv: number;
-  /** Pièces d'armure : cuir ou tissu. */
-  matiere?: 'cuir' | 'tissu';
+  /** Pièces d'armure : tissu, cuir, mailles ou plaques. */
+  matiere?: Matiere;
   stats: Partial<Record<Stat, number>>;
   armure: number;
   arme?: Arme;
@@ -93,6 +94,8 @@ export interface Perso {
   royaume?: string;
   niveau: number;
   classe: string;
+  /** Classe de l'armurerie (DRUID, WARRIOR…). */
+  classeEnum?: string;
   estDruide: boolean;
   faction?: Faction;
   specialisation?: string;
@@ -105,6 +108,8 @@ export interface Perso {
 }
 
 export interface Donnees {
+  /** Classe à laquelle ces objets sont destinés. */
+  classe: string;
   build: string;
   genere: string;
   objets: Objet[];

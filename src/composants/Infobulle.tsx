@@ -1,8 +1,11 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ARMES, COURT, INVENTAIRE, SPECIALISATIONS, STATS_BLANCHES, STATS_VERTES, nombre } from '../libelles.ts';
+import { NOMS_MATIERES } from '../classes/equipement.ts';
+import type { Specialisation } from '../classes/types.ts';
+import { ARMES, COURT, INVENTAIRE, STATS_BLANCHES, STATS_VERTES, nombre } from '../libelles.ts';
 import type { Etat } from '../etat.ts';
 import type { Objet, Stat } from '../types.ts';
 import { sourcesVisibles, valeur } from '../valeur.ts';
+import { useClasse } from './contexteClasse.tsx';
 import { texteSource } from './sources.ts';
 
 interface Position { x: number; y: number; ancre?: DOMRect }
@@ -67,6 +70,7 @@ export function FournisseurInfobulle({ etat, portes, children }: { etat: Etat; p
   }, [fixe, cacher]);
 
   const valeurCtx = useMemo(() => ({ montrer, cacher, courant: objet?.id ?? null, fixe }), [montrer, cacher, objet, fixe]);
+  const { spe } = useClasse();
   return (
     <Contexte.Provider value={valeurCtx}>
       {children}
@@ -76,7 +80,7 @@ export function FournisseurInfobulle({ etat, portes, children }: { etat: Etat; p
             <ContenuInfobulle o={objet} etat={etat} portes={portes} />
           </div>
           {/* Comme dans le jeu : la ou les pièces portées à côté, si l'objet survolé n'est pas porté. */}
-          {piecesPortees(objet, portes, etat).map((p) => (
+          {piecesPortees(objet, portes, spe).map((p) => (
             <div key={p.id} className="ib-boite ib-equipe">
               <div className="ib-entete">Actuellement équipé</div>
               <ContenuInfobulle o={p} etat={etat} portes={[]} compact />
@@ -143,21 +147,21 @@ const GROUPES: Partial<Record<Objet['emplacement'], Objet['emplacement'][]>> = {
  * Pièces portées à montrer à côté de l'objet survolé, la plus faible d'abord
  * (deux pour les bagues et les bijoux). Rien si l'objet est déjà porté.
  */
-function piecesPortees(o: Objet, portes: Objet[], etat: Etat): Objet[] {
+function piecesPortees(o: Objet, portes: Objet[], spe: Specialisation): Objet[] {
   if (portes.some((p) => p.id === o.id)) return [];
   const groupe = GROUPES[o.emplacement] ?? [o.emplacement];
   return portes
     .filter((p) => groupe.includes(p.emplacement))
-    .sort((a, b) => valeur(a, etat.role) - valeur(b, etat.role))
+    .sort((a, b) => valeur(a, spe) - valeur(b, spe))
     .slice(0, 2);
 }
 
 /** Pièce portée à laquelle comparer : la plus faible du même emplacement. */
-function pieceComparee(o: Objet, portes: Objet[], etat: Etat): Objet | null {
-  return piecesPortees(o, portes, etat)[0] ?? null;
+function pieceComparee(o: Objet, portes: Objet[], spe: Specialisation): Objet | null {
+  return piecesPortees(o, portes, spe)[0] ?? null;
 }
 
-function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat }) {
+function Comparaison({ o, piece: r, spe }: { o: Objet; piece: Objet; spe: Specialisation }) {
   const cles = [...new Set([...Object.keys(o.stats), ...Object.keys(r.stats)])] as Stat[];
   const lignes = cles
     .map((k) => [k, (o.stats[k] ?? 0) - (r.stats[k] ?? 0)] as const)
@@ -165,8 +169,8 @@ function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat
   const dps = o.arme && r.arme ? o.arme.dps - r.arme.dps : null;
   // Armure de base et armure bonus réunies en une seule ligne.
   const armure = (o.armure + (o.stats.armure ?? 0)) - (r.armure + (r.stats.armure ?? 0));
-  const va = valeur(r, etat.role);
-  const gain = va > 0 ? (valeur(o, etat.role) - va) / va : null;
+  const va = valeur(r, spe);
+  const gain = va > 0 ? (valeur(o, spe) - va) / va : null;
   return (
     <>
       <div className="ib-sep" />
@@ -178,7 +182,7 @@ function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat
       </div>
       {gain !== null && (
         <div className={gain > 0 ? 'ib-vert' : 'ib-rouge'}>
-          {gain > 0 ? '▲' : '▼'} {gain > 0 ? '+' : ''}{nombre(gain * 100)} % de valeur en {SPECIALISATIONS[etat.role].toLowerCase()}
+          {gain > 0 ? '▲' : '▼'} {gain > 0 ? '+' : ''}{nombre(gain * 100)} % de valeur en {spe.nom.toLowerCase()}
         </div>
       )}
     </>
@@ -187,11 +191,13 @@ function Comparaison({ o, piece: r, etat }: { o: Objet; piece: Objet; etat: Etat
 
 /** Contenu d'une bulle. `compact` : bulle « Actuellement équipé », sans provenance ni nom anglais. */
 function ContenuInfobulle({ o, etat, portes, compact }: { o: Objet; etat: Etat; portes: Objet[]; compact?: boolean }) {
+  const { classe, spe } = useClasse();
   const niveau = etat.niveau;
-  const compare = pieceComparee(o, portes, etat);
+  const compare = pieceComparee(o, portes, spe);
   const type = o.arme ? ARMES[o.arme.sous] ?? ''
-    : o.matiere ? (o.matiere === 'cuir' ? 'Cuir' : 'Tissu')
-    : o.emplacement === 'dos' ? 'Tissu' : o.emplacement === 'relique' ? 'Idole' : '';
+    : o.matiere ? NOMS_MATIERES[o.matiere]
+    : o.emplacement === 'dos' ? 'Tissu' : o.emplacement === 'relique' ? classe.relique?.nom ?? 'Relique'
+    : o.emplacement === 'bouclier' ? 'Bouclier' : '';
   return (
     <>
       <div className={`ib-titre q${o.q}`}>{o.nom}</div>
@@ -230,7 +236,7 @@ function ContenuInfobulle({ o, etat, portes, compact }: { o: Objet; etat: Etat; 
             return <div key={i}><span className="ib-src">{t.lieu}</span>{t.detail && <span className="ib-det"> · {t.detail}</span>}</div>;
           })}
           {portes.some((p) => p.id === o.id) && <div className="ib-vert">✓ Tu portes cet objet</div>}
-          {compare && <Comparaison o={o} piece={compare} etat={etat} />}
+          {compare && <Comparaison o={o} piece={compare} spe={spe} />}
           <div className="ib-gris">{o.nomEn && o.nomEn !== o.nom ? `VO : ${o.nomEn} · ` : ''}objet {o.id}</div>
         </>
       )}

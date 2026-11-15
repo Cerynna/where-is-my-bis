@@ -1,6 +1,7 @@
-// Extrait des tables du jeu (publiées + cache des objets révélés) tous les objets utiles
-// à un druide farouche du niveau 1 au niveau 60, avec stats, armure, dégâts, effets et icône.
+// Extrait des tables du jeu (publiées + cache des objets révélés) tous les objets qu'une classe
+// peut porter, du niveau 1 au niveau 60, avec stats, armure, dégâts, effets et icône.
 import path from 'node:path';
+import { SOUS_CLASSE_ARMURE, type EquipementClasse, type Matiere } from '../../src/classes/equipement.ts';
 import type { Arme, Effet, Emplacement, Stat } from '../../src/types.ts';
 import { indexer, lireCsv, type Ligne } from './commun.ts';
 import type { Hotfix, Rangee } from './cache-jeu.ts';
@@ -19,7 +20,7 @@ export interface Candidat {
   unique?: 1 | 2;
   emplacement: Emplacement;
   inv: number;
-  matiere?: 'cuir' | 'tissu';
+  matiere?: Matiere;
   stats: Partial<Record<Stat, number>>;
   statsInconnues: number[];
   armure: number;
@@ -44,24 +45,29 @@ const STATS: Record<number, Stat> = {
 
 // Colonne du budget de stats (RandPropPoints) selon l'emplacement.
 const INDEX_BUDGET: Record<number, number> = {
-  1: 0, 5: 0, 20: 0, 7: 0, 17: 0, 3: 1, 10: 1, 6: 1, 8: 1, 12: 1, 9: 2, 2: 2, 11: 2, 16: 2, 23: 2, 13: 3, 21: 3, 28: 4,
+  1: 0, 5: 0, 20: 0, 7: 0, 17: 0, 3: 1, 10: 1, 6: 1, 8: 1, 12: 1, 9: 2, 2: 2, 11: 2, 16: 2, 23: 2, 14: 2, 13: 3, 21: 3, 22: 3, 28: 4,
 };
 const EMPLACEMENT_ARMURE: Record<number, Emplacement> = {
   1: 'tete', 3: 'epaules', 5: 'torse', 20: 'torse', 6: 'taille', 7: 'jambes', 8: 'pieds', 9: 'poignets', 10: 'mains',
 };
-const ARMES_DRUIDE = new Set([4, 5, 6, 10, 13, 15]);
+const MATIERE_PAR_SOUS = Object.fromEntries(Object.entries(SOUS_CLASSE_ARMURE).map(([m, s]) => [s, m as Matiere])) as Record<number, Matiere>;
 
-/** Emplacement (et matière pour l'armure) d'un objet utilisable par un druide, sinon null. */
-function emplacement(classe: number, sous: number, inv: number): { emp: Emplacement; matiere?: 'cuir' | 'tissu' } | null {
+/**
+ * Emplacement (et matière pour l'armure) d'un objet que la classe peut porter, sinon null.
+ * Les armes à distance (arcs, fusils, baguettes, armes de jet) attendent leur emplacement à elles.
+ */
+function emplacement(eq: EquipementClasse, classe: number, sous: number, inv: number): { emp: Emplacement; matiere?: Matiere } | null {
   const armure = EMPLACEMENT_ARMURE[inv];
-  if (classe === 4 && (sous === 1 || sous === 2) && armure) return { emp: armure, matiere: sous === 2 ? 'cuir' : 'tissu' };
-  if (classe === 2 && ARMES_DRUIDE.has(sous)) return inv === 17 ? { emp: 'arme2m' } : [13, 21].includes(inv) ? { emp: 'arme1m' } : null;
+  const matiere = MATIERE_PAR_SOUS[sous];
+  if (classe === 4 && armure && matiere && eq.armures.some((a) => a.matiere === matiere)) return { emp: armure, matiere };
+  if (classe === 2 && eq.armes.includes(sous)) return inv === 17 ? { emp: 'arme2m' } : [13, 21].includes(inv) ? { emp: 'arme1m' } : null;
   if (classe === 4 && sous === 0 && inv === 2) return { emp: 'cou' };
   if (classe === 4 && sous === 0 && inv === 11) return { emp: 'doigt' };
   if (classe === 4 && sous === 0 && inv === 12) return { emp: 'bijou' };
   if (classe === 4 && sous === 0 && inv === 23) return { emp: 'maing' };
+  if (classe === 4 && sous === 6 && inv === 14 && eq.bouclier) return { emp: 'bouclier' };
   if (classe === 4 && inv === 16) return { emp: 'dos' };
-  if (classe === 4 && sous === 8 && inv === 28) return { emp: 'relique' };
+  if (classe === 4 && eq.relique && sous === eq.relique.sous && inv === 28) return { emp: 'relique' };
   return null;
 }
 
@@ -70,7 +76,8 @@ const FACTEUR_LANCEUR = { arme2m: 0.745, arme1m: 0.66 } as const;
 
 const nombre = (v: string | number | undefined): number => Number(v ?? 0);
 
-export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
+export function extraireObjets(build: string, hotfix: Hotfix, eq: EquipementClasse): Candidat[] {
+  const masque = 1 << (eq.idJeu - 1);
   const d = dossierWago(build);
   const lire = (t: string) => lireCsv(path.join(d, `${t}.csv`));
 
@@ -155,7 +162,7 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
     const it = items.get(id);
     if (!it) continue;
     const inv = nombre(s.InventoryType);
-    const place = emplacement(nombre(it.ClassID), nombre(it.SubclassID), inv);
+    const place = emplacement(eq, nombre(it.ClassID), nombre(it.SubclassID), inv);
     if (!place) continue;
     const emp = place.emp;
     const rl = nombre(s.RequiredLevel);
@@ -163,7 +170,7 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
     const q = nombre(s.OverallQualityID);
     if (rl > 60 || q < 2 || q > 5 || ilvl < 5) continue;
     const classes = nombre(s.AllowableClass);
-    if (classes !== -1 && classes !== 0 && !(classes & 1024)) continue;
+    if (classes !== -1 && classes !== 0 && !(classes & masque)) continue;
     if (/TEST|DEPRECATED|^OLD|\[PH\]|Monster -/i.test(String(s.Display_lang))) continue;
 
     const ligneBudget = budget.get(String(ilvl));
@@ -188,8 +195,12 @@ export function extraireObjets(build: string, hotfix: Hotfix): Candidat[] {
       const l = armLieu.get(String(inv));
       const aq = armQualite.get(String(ilvl));
       if (t && l && aq) {
-        const tissu = place.matiere !== 'cuir';
-        armure = Math.round(nombre(tissu ? t.Cloth : t.Leather) * nombre(tissu ? l.Clothmodifier : l.Leathermodifier) * nombre(aq[`Qualitymod_${q}`]));
+        // Colonnes des tables d'armure selon la matière (une cape compte comme du tissu).
+        const [total, lieu] = ({
+          tissu: ['Cloth', 'Clothmodifier'], cuir: ['Leather', 'Leathermodifier'],
+          mailles: ['Mail', 'Chainmodifier'], plaques: ['Plate', 'Platemodifier'],
+        } as const)[place.matiere ?? 'tissu'];
+        armure = Math.round(nombre(t[total]) * nombre(l[lieu]) * nombre(aq[`Qualitymod_${q}`]));
       }
     }
 

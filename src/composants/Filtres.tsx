@@ -1,13 +1,20 @@
-import type { Etat, Matiere } from '../etat.ts';
-import { DEFAUT, ROLES } from '../etat.ts';
-import { COURT, EMPLACEMENTS, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES, SPECIALISATIONS, STATS_FILTRE } from '../libelles.ts';
+import type { Classe } from '../classes/types.ts';
+import { NOMS_MATIERES, type Matiere } from '../classes/equipement.ts';
+import { specDe } from '../classes/index.ts';
+import type { Etat, Vue } from '../etat.ts';
+import { defaut } from '../etat.ts';
+import { COURT, EMPLACEMENTS, ORDRE_EMPLACEMENTS, ORDRE_SOURCES, QUALITES, SOURCES } from '../libelles.ts';
 import type { Emplacement, Stat, TypeSource } from '../types.ts';
 
 interface Props {
+  classe: Classe;
+  vue: Vue;
   etat: Etat;
   maj: (p: Partial<Etat>) => void;
   lieux: string[];
   comptes: Partial<Record<TypeSource, number>>;
+  /** Emplacements présents dans les données de la classe. */
+  emplacements: Emplacement[];
   avecPerso: boolean;
 }
 
@@ -15,8 +22,10 @@ function basculer<T>(liste: T[], v: T): T[] {
   return liste.includes(v) ? liste.filter((x) => x !== v) : [...liste, v];
 }
 
-export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
-  const liste = etat.vue === 'objets';
+export function Filtres({ classe, vue, etat, maj, lieux, comptes, emplacements, avecPerso }: Props) {
+  const liste = vue === 'objets';
+  const spe = specDe(classe, etat.role);
+  const libelleEmplacement = (e: Emplacement) => (e === 'relique' ? classe.relique?.nom ?? EMPLACEMENTS[e] : EMPLACEMENTS[e]);
   return (
     <div className="filtres">
       <fieldset className="bloc-niveau">
@@ -32,26 +41,30 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
         <div className="reperes" aria-hidden="true"><span>1</span><span>20</span><span>40</span><span>60</span></div>
       </fieldset>
 
-      <fieldset>
-        <legend>Spécialisation</legend>
-        <div className="seg seg-specs">
-          {ROLES.map((r) => (
-            <button key={r} type="button" aria-pressed={etat.role === r} onClick={() => maj({ role: r, stats: [] })}>{SPECIALISATIONS[r]}</button>
-          ))}
-        </div>
-      </fieldset>
+      {classe.specs.length > 1 && (
+        <fieldset>
+          <legend>Spécialisation</legend>
+          <div className={`seg${classe.specs.length > 2 ? ' seg-specs' : ''}`}>
+            {classe.specs.map((s) => (
+              <button key={s.id} type="button" aria-pressed={etat.role === s.id} onClick={() => maj({ role: s.id, stats: [] })}>{s.nom}</button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
-      <fieldset>
-        <legend>Armure</legend>
-        <div className="puces">
-          {(['cuir', 'tissu'] as Matiere[]).map((m) => (
-            <label key={m} className="puce">
-              <input type="checkbox" checked={etat.matieres.includes(m)} onChange={() => maj({ matieres: basculer(etat.matieres, m) })} />
-              {m === 'cuir' ? 'Cuir' : 'Tissu'}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {classe.armures.length > 1 && (
+        <fieldset>
+          <legend>Armure</legend>
+          <div className="puces">
+            {classe.armures.map(({ matiere: m }) => (
+              <label key={m} className="puce">
+                <input type="checkbox" checked={etat.matieres.includes(m)} onChange={() => maj({ matieres: basculer<Matiere>(etat.matieres, m) })} />
+                {NOMS_MATIERES[m]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset>
         <legend>Faction</legend>
@@ -124,7 +137,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
             <label>Emplacement
               <select id="sel-emplacement" value={etat.emplacement} onChange={(e) => maj({ emplacement: e.target.value as Emplacement | 'tous' })}>
                 <option value="tous">Tous</option>
-                {ORDRE_EMPLACEMENTS.map((e) => <option key={e} value={e}>{EMPLACEMENTS[e]}</option>)}
+                {ORDRE_EMPLACEMENTS.filter((e) => emplacements.includes(e)).map((e) => <option key={e} value={e}>{libelleEmplacement(e)}</option>)}
               </select>
             </label>
             <label>Donjon, raid ou zone
@@ -147,7 +160,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
             </label>
             <label>Trier par
               <select id="sel-tri" value={etat.tri} onChange={(e) => maj({ tri: e.target.value as Etat['tri'] })}>
-                <option value="valeur">Valeur pour le rôle</option>
+                <option value="valeur">Valeur pour la spécialisation</option>
                 <option value="niveau">Niveau requis</option>
                 <option value="ilvl">Niveau d’objet</option>
                 <option value="nom">Nom</option>
@@ -158,7 +171,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
           <fieldset>
             <legend>Doit avoir</legend>
             <div className="puces">
-              {STATS_FILTRE[etat.role].map((s: Stat) => (
+              {spe.filtre.map((s: Stat) => (
                 <label key={s} className="puce">
                   <input type="checkbox" checked={etat.stats.includes(s)} onChange={() => maj({ stats: basculer(etat.stats, s) })} />
                   {COURT[s]}
@@ -169,7 +182,7 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
         </>
       )}
 
-      <button type="button" className="lien" onClick={() => maj({ ...DEFAUT, vue: etat.vue, niveau: etat.niveau, role: etat.role })}>
+      <button type="button" className="lien" onClick={() => maj({ ...defaut(classe), niveau: etat.niveau, role: etat.role })}>
         Réinitialiser les filtres
       </button>
     </div>
