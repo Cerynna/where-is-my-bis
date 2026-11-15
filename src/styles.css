@@ -37,8 +37,10 @@
   --c-monstre: #e8a0bf;
   --c-inconnue: #c39bf0;
   --c-autre: #b9b9b9;
-  --font-d: "Marcellus", "Palatino Linotype", Georgia, serif;
+  /* Google Fonts (chargées dans index.html) */
+  --font-d: "IM Fell English", "Palatino Linotype", Georgia, serif;
   --font-b: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --font-pc: "Alegreya Sans SC", "Alegreya Sans", system-ui, sans-serif;
   --r: 3px;
   --gouttiere-g: max(16px, env(safe-area-inset-left, 0px));
   --gouttiere-d: max(16px, env(safe-area-inset-right, 0px));
@@ -63,9 +65,9 @@ button, input, select { font: inherit; color: inherit; }
 small { color: var(--muted); }
 * { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
 
-/* Étiquettes : petites capitales plutôt que majuscules espacées */
+/* Étiquettes : vraies petites capitales (Alegreya Sans SC) plutôt que majuscules espacées */
 .case-lib, legend, .sur-titre, .a-venir-titre {
-  font-variant: small-caps; text-transform: lowercase; letter-spacing: 0.04em; font-size: 0.92rem; color: var(--faible);
+  font-family: var(--font-pc); font-weight: 500; text-transform: lowercase; letter-spacing: 0.03em; font-size: 0.9rem; color: var(--faible);
 }
 
 /* Boutons */
