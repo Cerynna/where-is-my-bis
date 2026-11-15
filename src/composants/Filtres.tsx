@@ -74,6 +74,15 @@ export function Filtres({ etat, maj, lieux, comptes, avecPerso }: Props) {
             </label>
           ))}
         </div>
+        <label className="champ-taux" htmlFor="sel-taux">
+          Taux de butin minimum
+          <select id="sel-taux" value={etat.tauxMin} onChange={(e) => maj({ tauxMin: Number(e.target.value) })}>
+            <option value={0}>Tous les butins</option>
+            <option value={1}>1 %</option>
+            <option value={5}>5 %</option>
+            <option value={10}>10 %</option>
+          </select>
+        </label>
         <label className="coche">
           <input id="cb-maroquinier" type="checkbox" checked={etat.maroquinier} onChange={(e) => maj({ maroquinier: e.target.checked })} />
           Je suis travailleur du cuir <small>(pièces liées quand ramassées)</small>

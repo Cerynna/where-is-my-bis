@@ -29,6 +29,8 @@ export interface Source {
   faction?: Faction;
   /** Niveau de la quête, quand c'en est une. */
   niveau?: number;
+  /** Taux de butin en % (boss, monstres de base, monstre rare), quand il est connu. */
+  taux?: number;
 }
 
 export interface Arme {

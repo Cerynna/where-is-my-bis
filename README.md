@@ -60,6 +60,8 @@ L'étape 5 écarte :
 
 Les noms anglais sont traduits avec les tables du jeu (cartes, rencontres, factions). Les noms et niveaux des quêtes viennent de leur page wowf.io en français.
 
+**Taux de butin minimum.** Le site ignore les butins dont le taux connu est sous un seuil réglable (1 % par défaut ; Tous, 1 %, 5 % ou 10 %). Un objet n'est écarté que s'il n'a aucune autre provenance (quête, métier, marchand…). Le taux est stocké dans le champ `taux` des provenances (`src/types.ts`).
+
 **Provenances manquantes.** wowf.io ne révèle pas toutes les provenances (« Provenance pas encore révélée »). Wowhead les a souvent, mais seulement dans la page affichée par un navigateur : ses données ne sont pas lisibles par un script, et sa protection anti-robots n'est pas contournée ici. Le site renvoie donc ces objets vers leur fiche Wowhead.
 
 Pour corriger durablement un objet, ajoute sa provenance dans `donnees/provenances.json` :

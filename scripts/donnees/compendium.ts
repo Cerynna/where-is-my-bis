@@ -126,8 +126,9 @@ export function lireCompendium(build: string, nomsDonjons: string[]): Compendium
       const nomBoss = ch(champ(b, 'name')).replace(/\s*<[^>]*>/, '').trim();
       for (const l of liste(champ(b, 'loot'))) {
         const id = nb(champ(l, 1));
-        const taux = pourcent(nb(champ(l, 2)));
-        ajouter(id, { type, lieu, detail: `${boss.get(nomBoss) ?? nomBoss}${taux ? ` (${taux})` : ''}` });
+        const p = nb(champ(l, 2));
+        const taux = pourcent(p);
+        ajouter(id, { type, lieu, detail: `${boss.get(nomBoss) ?? nomBoss}${taux ? ` (${taux})` : ''}`, taux: p || undefined });
         if (forever) res.forever.add(id);
       }
     }
@@ -138,8 +139,9 @@ export function lireCompendium(build: string, nomsDonjons: string[]): Compendium
     if (!inst) continue;
     for (const o of liste(objets)) {
       const id = nb(champ(o, 1));
-      const taux = pourcent(nb(champ(o, 2)));
-      ajouter(id, { type: inst.type, lieu: inst.lieu, detail: `monstres du donjon${taux ? ` (${taux})` : ''}` });
+      const p = nb(champ(o, 2));
+      const taux = pourcent(p);
+      ajouter(id, { type: inst.type, lieu: inst.lieu, detail: `monstres du donjon${taux ? ` (${taux})` : ''}`, taux: p || undefined });
       if (inst.forever) res.forever.add(id);
     }
   }

@@ -62,15 +62,19 @@ export function passeCommun(o: Objet, e: Etat): boolean {
   if (o.matiere && !e.matieres.includes(o.matiere)) return false;
   if (!e.qualites.includes(o.q)) return false;
   if (e.hvSeulement && o.liaison !== 2) return false;
-  const sources = o.sources.filter((s) =>
-    e.sources.includes(s.type) && (e.faction === 'toutes' || !s.faction || s.faction === e.faction));
-  return sources.length > 0;
+  return o.sources.some((s) => sourceRetenue(s, e));
+}
+
+/** Provenance gardée par les filtres : type coché, bonne faction, butin pas trop rare. */
+export function sourceRetenue(s: Objet['sources'][number], e: Etat): boolean {
+  return e.sources.includes(s.type)
+    && (e.faction === 'toutes' || !s.faction || s.faction === e.faction)
+    && (s.taux === undefined || s.taux >= e.tauxMin);
 }
 
 /** Les provenances qui passent les filtres (type, faction), à afficher en premier. */
 export function sourcesVisibles(o: Objet, e: Etat): Objet['sources'] {
-  const ok = (s: Objet['sources'][number]) =>
-    e.sources.includes(s.type) && (e.faction === 'toutes' || !s.faction || s.faction === e.faction);
+  const ok = (s: Objet['sources'][number]) => sourceRetenue(s, e);
   return [...o.sources.filter(ok), ...o.sources.filter((s) => !ok(s))];
 }
 

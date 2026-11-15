@@ -100,6 +100,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .coche input { accent-color: var(--accent); margin-top: 4px; }
 input[type="search"], select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 9px; }
 .grille-2 { grid-template-columns: minmax(0, 1fr); }
+.champ-taux { display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); }
 .grille-2 label { display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); }
 .lien { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; justify-self: start; padding: 0; }
 

@@ -30,6 +30,8 @@ export interface Etat {
   tri: Tri;
   /** Base d'objets : seulement ce qui bat ce que porte le personnage importé. */
   ameliorations: boolean;
+  /** Taux de butin minimum en % : un butin plus rare est ignoré (0 = tout garder). */
+  tauxMin: number;
 }
 
 export const DEFAUT: Etat = {
@@ -50,6 +52,7 @@ export const DEFAUT: Etat = {
   ecart: 0,
   tri: 'valeur',
   ameliorations: false,
+  tauxMin: 1,
 };
 
 const CLE = 'feral-forever:etat';
@@ -66,6 +69,7 @@ function nettoyer(e: Partial<Etat>): Etat {
     niveau: borner(Number(e.niveau ?? DEFAUT.niveau), 1, 60),
     avance: borner(Number(e.avance ?? 0), 0, 10),
     ecart: borner(Number(e.ecart ?? 0), 0, 59),
+    tauxMin: borner(Number(e.tauxMin ?? DEFAUT.tauxMin), 0, 100),
     role: e.role && ROLES.includes(e.role) ? e.role : 'chat',
     matieres: (e.matieres ?? DEFAUT.matieres).filter((m): m is Matiere => m === 'cuir' || m === 'tissu'),
     vue: e.vue === 'objets' ? 'objets' : 'ensemble',
@@ -105,6 +109,7 @@ export function lireEtat(): Etat {
     ecart: p.has('ecart') ? Number(p.get('ecart')) : undefined,
     tri: (p.get('tri') as Tri) ?? undefined,
     ameliorations: p.has('mieux') ? p.get('mieux') === '1' : undefined,
+    tauxMin: p.has('taux') ? Number(p.get('taux')) : undefined,
   };
   // Un lien partagé décrit tout l'état : on n'y mêle pas les réglages gardés dans ce navigateur.
   const defini = Object.fromEntries(Object.entries(depuisUrl).filter(([, v]) => v !== undefined)) as Partial<Etat>;
@@ -132,5 +137,6 @@ export function ecrireEtat(e: Etat): void {
   if (e.ecart) p.set('ecart', String(e.ecart));
   if (e.tri !== DEFAUT.tri) p.set('tri', e.tri);
   if (e.ameliorations) p.set('mieux', '1');
+  if (e.tauxMin !== DEFAUT.tauxMin) p.set('taux', String(e.tauxMin));
   history.replaceState(null, '', `${location.pathname}?${p.toString()}${location.hash}`);
 }
