@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { importerPerso } from '../armurerie.ts';
 import { classeParEnum } from '../classes/index.ts';
+import { ARMURERIE_DISPONIBLE } from '../env.ts';
 import type { Classe } from '../classes/types.ts';
 import type { Perso } from '../types.ts';
 
@@ -65,10 +66,17 @@ export function PersoPanneau({ perso, classe, surImport, surOubli }: Props) {
             {perso.majArmurerie ? ` · armurerie mise à jour ${depuis(perso.majArmurerie)}` : ''}
           </p>
           <div className="perso-actions">
-            <button type="button" className="bouton" onClick={() => void importer(perso.lien)} disabled={charge}>{charge ? 'Actualisation…' : 'Actualiser'}</button>
+            {ARMURERIE_DISPONIBLE && (
+              <button type="button" className="bouton" onClick={() => void importer(perso.lien)} disabled={charge}>{charge ? 'Actualisation…' : 'Actualiser'}</button>
+            )}
             <button type="button" className="lien" onClick={surOubli}>Oublier ce personnage</button>
           </div>
         </>
+      ) : !ARMURERIE_DISPONIBLE ? (
+        // Site en ligne : pas encore de relais vers l'armurerie (voir env.ts).
+        <p className="perso-indispo">
+          Bientôt sur le site en ligne : colle le lien de ton personnage sur l’armurerie pour voir ce qui améliorerait ton équipement.
+        </p>
       ) : (
         <form onSubmit={envoyer}>
           <label htmlFor="lien-armurerie">Colle le lien de ton personnage sur l’armurerie WoW Forever pour comparer avec ce que tu portes.</label>

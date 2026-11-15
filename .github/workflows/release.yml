@@ -1,0 +1,64 @@
+name: Release et déploiement
+
+# À chaque push sur main : version suivante (le patch monte tout seul ; majeure et mineure
+# se règlent à la main dans package.json), construction, release GitHub, puis Firebase Hosting.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Une release à la fois : deux pushes rapprochés ne prennent pas le même numéro.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tous les tags, pour trouver le dernier patch
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Numéro de version
+        id: version
+        run: node --experimental-strip-types --no-warnings scripts/version-suivante.ts >> "$GITHUB_OUTPUT"
+
+      - name: Construire le site
+        run: npm run build
+        env:
+          VITE_VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Release GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          precedent=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          if [ -n "$precedent" ]; then
+            git log "$precedent"..HEAD --no-merges --pretty='- %s' > notes.md
+          else
+            git log --no-merges --pretty='- %s' -n 40 > notes.md
+          fi
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md
+
+      - name: Déployer sur Firebase Hosting
+        if: env.FIREBASE_TOKEN != ''
+        run: npx --yes firebase-tools@15 deploy --only hosting --project where-is-my-bis --non-interactive --message "v${{ steps.version.outputs.version }}"
+
+      - name: Jeton Firebase absent
+        if: env.FIREBASE_TOKEN == ''
+        run: echo "::warning::Secret FIREBASE_TOKEN absent : release créée, mais site non déployé."

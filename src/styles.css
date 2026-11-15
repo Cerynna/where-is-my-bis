@@ -337,6 +337,7 @@ input[type="search"]:focus, input[type="url"]:focus, select:focus { border-color
 .perso-alerte { font-size: 0.85rem; color: var(--c-metier); padding-left: 8px; border-left: 2px solid var(--c-metier); }
 .perso-alerte a { color: inherit; }
 .perso-erreur { font-size: 0.85rem; color: var(--tip-red); }
+.perso-indispo { font-size: 0.88rem; color: var(--muted); font-style: italic; }
 
 /* Comparaison avec l'équipement porté */
 .statut { font-size: 0.8rem; font-weight: 700; margin-top: 2px; }

@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { usePerso } from '../App.tsx';
 import { cheminPublic } from '../chemins.ts';
+import { ARMURERIE_DISPONIBLE } from '../env.ts';
 import { CLASSES, classeParEnum } from '../classes/index.ts';
 import { IconeSpe } from '../composants/IconeSpe.tsx';
 import { PersoPanneau } from '../composants/PersoPanneau.tsx';
@@ -22,8 +23,8 @@ export function Accueil() {
         <h1>Le meilleur équipement, niveau par niveau</h1>
         <p>
           Pour chaque classe de WoW Forever et chaque spécialisation, l’ensemble conseillé à ton niveau, du 1 au 60, avec la provenance de chaque
-          pièce : donjon et boss, quête, métier, réputation. Colle le lien de ton personnage sur l’armurerie pour voir ce qui améliorerait ton
-          équipement.
+          pièce : donjon et boss, quête, métier, réputation.
+          {ARMURERIE_DISPONIBLE && ' Colle le lien de ton personnage sur l’armurerie pour voir ce qui améliorerait ton équipement.'}
         </p>
       </section>
 

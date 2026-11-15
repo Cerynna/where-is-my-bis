@@ -53,14 +53,25 @@ On colle le lien de son personnage sur l'armurerie WoW Forever, par exemple `htt
 
 Le site marque ensuite chaque pièce : portée, amélioration (+x %) ou emplacement vide. Quand l'objet conseillé n'est pas porté, l'infobulle affiche aussi la pièce équipée à côté. La base d'objets peut ne montrer que les améliorations.
 
-L'armurerie refuse les requêtes venues d'un autre site (CORS). La page passe donc par le relais `/armurerie`, qui renvoie vers `https://worldofwarcraft.blizzard.com`. Ce relais est fourni par le proxy de Vite (`npm run dev` et `npm run preview`).
+L'armurerie refuse les requêtes venues d'un autre site (CORS). La page passe donc par le relais `/armurerie`, qui renvoie vers `https://worldofwarcraft.blizzard.com`. Ce relais est fourni par le proxy de Vite (`npm run dev` et `npm run preview`). Firebase Hosting ne sait pas relayer vers un autre site : **en ligne, l'import est désactivé** (le panneau l'annonce) tant qu'il n'y a pas de fonction Cloud pour le faire (forfait Blaze). Une construction avec `VITE_ARMURERIE=1` le réactive.
 
-### Hébergement statique
+## Mise en ligne
 
-Deux règles de réécriture seront nécessaires :
+Le site est hébergé sur Firebase Hosting, projet `where-is-my-bis` : https://where-is-my-bis.web.app. `firebase.json` renvoie toute adresse qui n'est pas un fichier vers `index.html` (routes de React Router) et règle le cache (fichiers de `assets/` immuables, données 10 min).
 
-- `/armurerie/*` vers `https://worldofwarcraft.blizzard.com/*` (le relais ci-dessus) ;
-- toute autre adresse qui n'est pas un fichier vers `index.html`, sinon un lien direct comme `/druide/objets` donne une erreur 404 du serveur.
+**Chaque push sur `main` publie une release** (`.github/workflows/release.yml`) :
+
+1. `scripts/version-suivante.ts` calcule le numéro. **La majeure et la mineure se règlent à la main** dans le champ `version` de `package.json` (par exemple `0.2.0`, puis `1.0.0`) ; **le patch monte tout seul** : plus grand tag `vX.Y.*` + 1, ou le patch de `package.json` s'il n'y a encore aucun tag pour cette majeure.mineure.
+2. Le site est construit avec ce numéro (`VITE_VERSION`), affiché dans le pied de page avec un lien vers la release.
+3. Le tag `vX.Y.Z` et la release GitHub sont créés, avec la liste des commits depuis la release précédente.
+4. Le site est déployé sur Firebase Hosting avec le secret `FIREBASE_TOKEN` du dépôt. Sans ce secret, la release est créée mais le site n'est pas déployé (avertissement dans l'onglet Actions).
+
+Pour créer ou renouveler le jeton (à faire par le propriétaire du projet Firebase) :
+
+```bash
+firebase login:ci
+gh secret set FIREBASE_TOKEN --repo Cerynna/where-is-my-bis
+```
 
 ## Commandes
 

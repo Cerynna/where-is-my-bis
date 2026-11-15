@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { cheminPublic } from '../chemins.ts';
+import { DEPOT, VERSION } from '../env.ts';
 
 /** En-tête, contenu de la page et pied de page, communs à tout le site. */
 export function Cadre() {
@@ -29,6 +30,10 @@ export function Cadre() {
           fiches et icônes de <a href="https://www.wowhead.com/forever" target="_blank" rel="noopener">Wowhead</a>.
         </p>
         <p>Site de fan, non affilié à Blizzard Entertainment.</p>
+        <p>
+          {VERSION ? <a href={`${DEPOT}/releases/tag/v${VERSION}`} target="_blank" rel="noopener">Version {VERSION}</a> : 'Version de développement'}
+          {' · '}<a href={DEPOT} target="_blank" rel="noopener">Code source</a>
+        </p>
       </footer>
     </>
   );
